@@ -1,3 +1,10 @@
+---
+layout: post
+title:  "Improving code readability in functional C# using Linq to Monad"
+date:   2023-05-18 21:31:54 +1000
+categories: jekyll update
+---
+
 
 # Improving code readability in functional C# using Linq to Monad
 
