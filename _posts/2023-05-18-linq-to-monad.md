@@ -5,9 +5,6 @@ date:   2023-05-18 21:31:54 +1000
 categories: jekyll update
 ---
 
-
-# Improving code readability in functional C# using Linq to Monad
-
 How to implement computation expressions in C#
 
 ![A puppy enthusiastically reading well-written and readable code from a computer screen. Although from here it is not clear if that code is a functional code.](https://cdn-images-1.medium.com/max/2048/1*wmihy9TV2z6x238jY4C6Hw.png)*A puppy enthusiastically reading well-written and readable code from a computer screen. Although from here it is not clear if that code is a functional code.*
