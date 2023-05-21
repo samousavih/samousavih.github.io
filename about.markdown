@@ -9,7 +9,8 @@ permalink: /about/
 ## About me
 "If you cannot explain something in simple terms, you don't understand it."(Feynman)
 
-I am a full time Software Engineer, graduated with a master degree in 2013. I have tried variety of different tech and languages including BASIC, C, C++, Java, JavaScript and C#. One of the very first codes I wrote was a virus in BASIC which I ran on my school's computer to see how viruses work, luckily that experiment didn’t work. I am curious about all aspects of software. I love to understand complex stuff deeper and explain them to others in very simple terms.
+I am a full time Software Engineer, graduated with a master degree in 2013. I have tried variety of tech and languages including BASIC, C, C++, Java, JavaScript and C#. One of the very first code I wrote was a virus in BASIC which I ran on my school's computer to see how viruses work. Luckily that curiosity didn't end in a disaster.
+I am curious about all aspects of software. I love to understand complex stuff deeper and explain them to others in very simple terms.
 
 
 ## Contact me
