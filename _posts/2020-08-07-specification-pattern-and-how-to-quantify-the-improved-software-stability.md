@@ -5,8 +5,6 @@ date:   2020-08-07 21:31:54 +1000
 categories: oop
 ---
 
-Photo by Markus Spiske on Unsplash
-
 ### Abstract
 
 Using stability and abstraction metrics we can measure how stable a software architecture is. To show those metrics in action, I will display step by step how to apply the metrics and how utilising a design pattern can improve them. The design pattern I will use is Specification Pattern.
@@ -15,7 +13,7 @@ Using stability and abstraction metrics we can measure how stable a software arc
 
 The architecture of a hotel booking system is described in this [article](https://medium.com/@samousavih/common-closure-principle-the-story-of-an-evolving-architecture-6919b452c8db?source=friends_link&sk=ad7c99d1c4790186cff1d91061cf1c8d) in detail. However, for the purpose of this article, we review it briefly. The system is for booking and amending hotel accommodation. It consists of four components, booking creation component, booking amendment component, booking documents component and booking registry Component. Booking creation holds all of the logic and policies for creating a new booking, respectively booking amendment does a similar job for changing a booking which was created before. Both components can communicate with the other two to create or amend booking records and booking documents. Diagram 1 shows the architecture of the system. The focus of this article is the booking registry and its communication with other components.
 
-![Diagram 1- Booking system’s overall architecture and the communications among its components](https://cdn-images-1.medium.com/max/2000/1*bosKSaLRr5c3-a4d8wtHRw.jpeg)*Diagram 1- Booking system’s overall architecture and the communications among its components*
+![Diagram 1- Booking system’s overall architecture and the communications among its components](/images/booking-system-overall-architecture.jpg) *Diagram 1- Booking system’s overall architecture and the communications among its components*
 
 ### Booking Registry component and query implementations
 
@@ -24,14 +22,15 @@ As mentioned above the booking registry keeps all of the booking records. Additi
 ![Diagram 2- Classes inside booking registry](https://cdn-images-1.medium.com/max/2000/1*JONLGKtMgjYF101G5leUcA.jpeg)*Diagram 2- Classes inside booking registry*
 
 if we zoom inside the query handler class we see methods for each query. The pseudocode for the class is displayed here.
-
-    Class BookingRegistryQueryHandler
-     extends IBookingRegistryQueryHandler{
-      BookingRecord GetBookingRecordsById(BookingId id){}
-      BookingRecord[] GetBookingRecordsByStatus(BookingStatus status){}
-      BookingRecord[] GetBookingRecordsByCustomer(CustomerId id){}
-        ...  
-    }
+```c#
+Class BookingRegistryQueryHandler
+    extends IBookingRegistryQueryHandler{
+    BookingRecord GetBookingRecordsById(BookingId id){}
+    BookingRecord[] GetBookingRecordsByStatus(BookingStatus status){}
+    BookingRecord[] GetBookingRecordsByCustomer(CustomerId id){}
+    ...  
+}
+```
 
 Not all of these methods are being invoked by every client. Some might call only one some might do more. There could be also methods shared across one or more of those clients. As the product grows and new features implemented these methods need to be changed as well. Therefore, this class and the parent component would need to be altered. These change would happen at different times and for different reasons. Each time the new feature needed a new way of fetching data with new parameters we need to test and redeploy booking registry component too. Even worse, having shared queries across different components and different subdomains of the system could cause instability as those components would grow differently.
 
@@ -44,40 +43,43 @@ Specification pattern is explained in [DDD book](https://www.amazon.com/Domain-D
 
 To achieve this we need to add a specification class to the booking registry component. Then each of the clients would need to define their own derived version of the specification based on the booking record query they want. Additionally, we can also make the specification class inside booking registry an abstract class. This is helpful because we do not expect any client to create an instance of the classes and they must always extend it. Here is how our new design looks like.
 
-![Diagram 3- Booking registry with specifications](https://cdn-images-1.medium.com/max/2000/1*kY5454_Ik3_zQqSwevZAJA.jpeg)*Diagram 3- Booking registry with specifications*
+![Diagram 3- Booking registry with specifications](/images/booking-registry-with-specifications.jpg)
+*Diagram 3- Booking registry with specifications*
 
 And the query class would look like this :
-
-    Class BookingRegisteryQueryHandler
-     extends IBookingRegisteryQueryHandler{
-     BookingRecord[] GetBookingRecordsBySpecification(Specification s){}
-    }
+```c#
+Class BookingRegisteryQueryHandler
+    extends IBookingRegisteryQueryHandler{
+    BookingRecord[] GetBookingRecordsBySpecification(Specification s){}
+}
+```
 
 And here is the specification class :
-
-    abstract class Specification {
-     abstract bool IsSatisfiedBy(BookingRecord b)
-    }
-
+```c#
+abstract class Specification {
+    abstract bool IsSatisfiedBy(BookingRecord b)
+}
+```
 Now each client can drive a new specification by extending the abstract class. Here are some examples.
-
-    class BookingStatusSpecification extend Specification {
-        BookingStatus status
-        bool IsSatisfiedBy(BookingRecord b){
-           return b.Status == status
-        }
+```c#
+class BookingStatusSpecification extend Specification {
+    BookingStatus status
+    bool IsSatisfiedBy(BookingRecord b){
+        return b.Status == status
     }
+}
 
-    class BookingCustomerSpecification extend Specification {
-       CustomerId id
-       bool IsSatisfiedBy(BookingRecord b){
-           return b.Customer.Id == id
-       }
+
+class BookingCustomerSpecification extend Specification {
+    CustomerId id
+    bool IsSatisfiedBy(BookingRecord b){
+        return b.Customer.Id == id
     }
-
+}
+```
 The two specifications displayed above could reside in different components here is a component overview of specifications.
 
-![Diagram 4- Clients can extend abstract specification class](https://cdn-images-1.medium.com/max/2000/1*qpZugCTd1FTv9ZPyDketzw.jpeg)*Diagram 4- Clients can extend abstract specification class*
+![Diagram 4- Clients can extend abstract specification class](/images/clients-can-extend-abstract-specification-class.jpg)*Diagram 4- Clients can extend abstract specification class*
 
 The result booking registry is more extendable. To add a new query because of a new feature or a whole new component all you need to do is to extend the abstract specification class and implement a new one inside the client component. So, we no longer have to alter any class or code inside the booking registry. Moreover, The number of reasons to change booking registry is now a lot less than before we no longer have to change, test and redeploy the component because of other components. Although we made great progress we won't stop here. In the next section, we can measure and quantify how much more stable the new architecture is.
 
@@ -97,7 +99,8 @@ Na is the total number of abstract classes and interfaces in a component and Nc 
 
 Using the mentioned metrics we can draw a graph called A/I graph and point out every component. Next diagram displays the graph.
 
-![Diagram 5- A/I graph](https://cdn-images-1.medium.com/max/2000/1*996kL8-wtZDwn0xLYpXpKA.jpeg)*Diagram 5- A/I graph*
+![Diagram 5- A/I graph](/images/a-i-graph.jpg)
+*Diagram 5- A/I graph*
 
 The main sequence is where ideally all of the components should be mapped. Because the more stable components are the more abstract they should be and vice versa. The ideal component is a component which is maximally stable and at the same time maximally abstract or maximally unstable and at the same time maximally concrete. To see more details and why this is the case, have a look at Clean Architecture book. Not all of the components would position on the main sequence so we calculate the distance to the main sequence using this equation.
 
@@ -113,23 +116,24 @@ I-metric can also be calculated using the same diagram. Since the Fan-in is 2 be
 
 D =┃0.5+0 -1┃ = 0.5.
 
-![Diagram 6- To calculate A-metric and I-metric](https://cdn-images-1.medium.com/max/2000/1*71KSj72CeBjNgXBJqrsyHw.jpeg)*Diagram 6- To calculate A-metric and I-metric*
+![Diagram 6- To calculate A-metric and I-metric](/images/to-calculate-a-metric-and-i-metric.jpg)*Diagram 6- To calculate A-metric and I-metric*
 
 Let’s also see how much we improved the D-metric. If we calculate the D metric before using the specification pattern, the value would be 0.7¹. So we can see we were able to improve the D metric from 0.7 to 0.5 by applying the specification pattern and using an abstract specification class.
 
 Additionally, we can visualise the D-metrics for the component before and after the refactoring by utilising the A/I graph in diagram 7.
 
-![Diagram 7- visualising the D-metrics for the component before and after the refactoring](https://cdn-images-1.medium.com/max/2000/1*oBYVFpQwUxTYdW73OZg_JQ.jpeg)*Diagram 7- visualising the D-metrics for the component before and after the refactoring*
+![Diagram 7- visualising the D-metrics for the component before and after the refactoring](/images/visualising-the-d-metrics.jpg)
+*Diagram 7- visualising the D-metrics for the component before and after the refactoring*
 
 ### Can we go further?
 
 In the last component design, there are still some pain points. In the booking registry, we have some abstract classes and some concrete classes in the same component. The question is, do they change with the same reason and at the same time? the answer is no. The query handler class contains the details of the query we use for fetching booking records. This class knows about the data storage and potentially the framework used here. It also couples with the schema of the data storage. As a result, this class could change because of any of those details. Any changes in the schema, using a new framework or query optimisation might affect this class. However, the interface, specification class and even the booking record data structure would unlikely to change because of the mentioned reasons. Therefore, it doesn’t make a lot of sense to have them in the same component. For further improvement, let’s add a new component to our architecture. We can call that booking registry data gateway. Here, is how the architecture looks like with the new component.
 
-![Diagram 8- Adding booking registry data gateway](https://cdn-images-1.medium.com/max/2000/1*6bf3IxqBn7T02W2rVZsYJw.jpeg)*Diagram 8- Adding booking registry data gateway*
+![Diagram 8- Adding booking registry data gateway](/images/adding-booking-registry-data-gateway.jpg)*Diagram 8- Adding booking registry data gateway*
 
 And finally, if we calculate the metrics and point out the two components on A/I graph, it looks like digram 9.
 
-![Diagram 9- Booking registry and booking registry gateway displayed on A/I graph](https://cdn-images-1.medium.com/max/2000/1*rs2rMXoaLVi1wUBnrRFB7Q.jpeg)*Diagram 9- Booking registry and booking registry gateway displayed on A/I graph*
+![Diagram 9- Booking registry and booking registry gateway displayed on A/I graph](/images/booking-registery-on-a-i-graph.jpg)*Diagram 9- Booking registry and booking registry gateway displayed on A/I graph*
 
 As displayed in the diagram, the results are promising. We refactored booking registry into two new competes with D metrics 0.3 and 0.
 

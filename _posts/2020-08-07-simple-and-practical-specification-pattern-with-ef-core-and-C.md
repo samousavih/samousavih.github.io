@@ -5,7 +5,7 @@ date:   2020-08-07 21:31:54 +1000
 categories: oop
 ---
 
-Photo by Samantha Gades on Unsplash
+![Header Image](/images/teo-d-4op9_2Bt2Eg-unsplash.jpg)
 
 ## Abstract
 
@@ -17,46 +17,101 @@ In [this article](https://medium.com/dev-genius/common-closure-principle-the-sto
 
 The main part of the specification pattern is an abstract specification class. Let’s see how we can implement that using C#.
 
-<iframe src="https://medium.com/media/8a96505cefb944700cb92b1e10abc2b1" frameborder=0></iframe>
-
+```c#
+namespace HotelBookingSystem.BookingRegistry {
+    public abstract class Specification {
+    abstract bool IsSatisfiedBy(BookingRecord b);
+    }
+}
+```
 Now let’s see how the query handler looks like in C#.
-
-<iframe src="https://medium.com/media/d0eedd8f43425a9ad792f313524cd322" frameborder=0></iframe>
-
+```c#
+namespace HotelBookingSystem.BookingRegistry {
+    public Class BookingRegisteryQueryHandler: IBookingRegisteryQueryHandler {
+        private readonly BookingRecordContext context;
+            public BookingRegisteryQueryHandler(BookingRecordContext context) {
+                this.context = context;
+            }
+        IEnumerable<BookingRecord> GetBookingRecordsBySpecification(Specification spedification) {
+        return context.BookingRecords
+                .Where(b => spedification.IsSatisfiedBy(b))
+                .ToList();
+        }
+    }
+}
+```
 As you can see in the above code snippet “GetBookingBySpecification” method is calling the main method of a specification inside the where clause. To try this we can use the following class which specifies all of the bookings in the finished state.
-
-<iframe src="https://medium.com/media/8aab2a65b9ae1673a7b677001735e5c5" frameborder=0></iframe>
+```c#
+namespace HotelBookingSystem.BookingAmendments {
+    public class FinishedBookingSpecification : Specification {
+        public override bool IsSatisfiedBy(BookingRecord bookingRecord) {
+            return bookingRecord.Status == BookingRecordStatus.Finished;
+        }
+    }
+}
+```
 
 As expected the query handler would return all of the finished bookings.
 
 ### Query performance concerns
 
 We are using Entity Framework. It would translate Linq queries into SQL queries. If we [turn on query logging](https://docs.microsoft.com/en-us/ef/core/miscellaneous/logging?tabs=v3) we can see the generated query for the “FinishedBookingSpecification” looks like this.
-
-    SELECT b.Id, b.Status,...
-    FROM bookingrecord AS b
-
+```sql
+SELECT b.Id, b.Status,...
+FROM bookingrecord AS b
+```
 Surprisingly we can see it is missing the “Where” condition. The reason is EF has a limitation in converting Linq queries into SQL queries. EF would run the rest of the query in memory. It is called [client evaluation](https://docs.microsoft.com/en-us/ef/core/querying/client-eval). This query is inefficient and as the application scales up would be an issue. Let’s see how we can improve this in the next section.
 
 ### Using lambda expressions
 
 C# has lambda expressions which if used inside a Linq query can be translated into SQL queries. Let’ see how abstract specification looks like with lambda expressions.
 
-<iframe src="https://medium.com/media/5f630202a1000012e216e5fd443007ee" frameborder=0></iframe>
-
+```c#
+namespace HotelBookingSystem.BookingRegistry {
+    public abstract class ExpressionSpecification {
+        public Expression<Func<BookingRecord, bool>> Expression { get; set; }        
+    }
+}
+```
 Let’s also reimplement the “FinishedBookingSpecification” using lambda expressions.
 
-<iframe src="https://medium.com/media/967bb064b16998a658dd838f5c2b62c0" frameborder=0></iframe>
+```c#
+using HotelBookingSystem.BookingRegistry;
+
+namespace HotelBookingSystem.BookingAmendments {
+    public class FinishedBookingSpecification : Specification {
+        public FinishedBookingSpecification() {
+            this.Expression = bookingRecord => 
+                bookingRecord.Status == BookingRecordStatus.Finished;
+        }
+    }
+}
+```
 
 And here is how we need to change the query handler class.
 
-<iframe src="https://medium.com/media/148ac5707f026340b59f10f1edf225eb" frameborder=0></iframe>
+```c#
+namespace HotelBookingSystem.BookingRegistry {
+    public class BookingRegisteryQueryHandler : IBookingRegisteryQueryHandler {
+        private readonly BookingRecordContext context;
 
+        public BookingRegisteryQueryHandler(BookingRecordContext context) {
+            this.context = context;
+        }
+        public IEnumerable<BookingRecord> GetBookingRecordsBySpecification(Specification spedification) {
+             return context.BookingRecords
+                .Where(spedification.Expression)
+                .ToList();
+        }
+    }
+}
+```
 Finally, if we run the query and look into the generated result we see this.
-
-    SELECT b.Id, b.Status,...
-    FROM bookingrecord AS b
-    WHERE b.status = 0
+```sql
+SELECT b.Id, b.Status,...
+FROM bookingrecord AS b
+WHERE b.status = 0
+```
 
 We have achieved the SQL query we were looking for.
 
