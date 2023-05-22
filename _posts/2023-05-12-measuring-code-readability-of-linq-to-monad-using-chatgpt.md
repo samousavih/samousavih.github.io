@@ -24,67 +24,68 @@ I have [setup SonarQube in my local machine ](https://medium.com/c-sharp-progarm
 ### Measuring Linq to Monads readability using SonarQube
 
 Let’s compare cognitive complexity of the two variations of create booking function, one with Linq and another with Bind operator as per the [Linq to Monad post](https://itnext.io/improving-code-readability-in-functional-c-using-linq-to-monad-d4c73194e9b1).
-
-    public static Either<Problem, ConfirmedBooking> CreateBooking(BookingRequest bookingRequest)
-    {
-        return ValidateBooking(bookingRequest)
-            .Bind(validatedBooking => {
-            return GenerateBookingNumber(bookingRequest)
-                .Bind(bookingNumber => {
-                return CalculateFees(validatedBooking)
-                    .Bind(bookingFees => {
-                        return CreateBookingAcknowledgement(bookingRequest, bookingNumber, bookingFees)
-                            .Bind<ConfirmedBooking>(bookingAcknowledgement => new ConfirmedBooking {
-                                BookingRequest = bookingRequest,
-                                BookingNumber = bookingNumber,
-                                BookingAcknowledgement = bookingAcknowledgement,
-                            });
-                    });
-            });
-        });
-    }
-
-    public static Either<Problem, ConfirmedBooking> CreateBooking(BookingRequest bookingRequest)
-    {
-        return 
-            from validatedBooking in ValidateBooking(bookingRequest)
-            from bookingNumber in GenerateBookingNumber(bookingRequest)
-            from bookingFees in CalculateFees(validatedBooking)
-            from bookingAcknowledgement in CreateBookingAcknowledgement(bookingRequest, bookingNumber, bookingFees)
-            select new ConfirmedBooking
-            {
-                BookingRequest = bookingRequest,
-                BookingNumber = bookingNumber,
-                BookingAcknowledgement = bookingAcknowledgement,
-            };
-    }
-
-Interestingly the cognitive complexity is 0 for both of the above codes. Despite the first code extract being nested, and is expected to have lower code readability.
-
-Looking deeper into the definition of cognitive complexity metric, the indifference to nesting of the first code is because there are no conditional statements, loops, exception handling, etc [as per page 16 of the white paper](https://www.sonarsource.com/resources/cognitive-complexity/). Cognitive complexity metric counts nested methods and lambdas, but the metric only increases when they are combined with the mentioned elements. In fact to display that, if we add an arbitrary condition in the first code as below, we see cognitive complexity increases to 4.
-
-    public static Either<Problem, ConfirmedBooking> CreateBooking(BookingRequest bookingRequest)
-    {
-        return validateBooking(bookingRequest)
-            .Bind(validatedBooking => {
-            return generateBookingNumber(validatedBooking)
-                .Bind(bookingNumber => {
-                return calculateFees(validatedBooking)
-                    .Bind(bookingFees => {
-                        if(bookingFees.TotalFee < 0.0m)
-                            return Problems.Nofee;
-                    return createBookingAcknowledgement(validatedBooking, bookingNumber, bookingFees)
-                        .Map(bookingAcknowledgement => new ConfirmedBooking
-                        {
-                            ValidatedBooking = validatedBooking,
+```c#
+public static Either<Problem, ConfirmedBooking> CreateBooking(BookingRequest bookingRequest)
+{
+    return ValidateBooking(bookingRequest)
+        .Bind(validatedBooking => {
+        return GenerateBookingNumber(bookingRequest)
+            .Bind(bookingNumber => {
+            return CalculateFees(validatedBooking)
+                .Bind(bookingFees => {
+                    return CreateBookingAcknowledgement(bookingRequest, bookingNumber, bookingFees)
+                        .Bind<ConfirmedBooking>(bookingAcknowledgement => new ConfirmedBooking {
+                            BookingRequest = bookingRequest,
                             BookingNumber = bookingNumber,
                             BookingAcknowledgement = bookingAcknowledgement,
                         });
+                });
+        });
+    });
+}
+```
+```c#
+public static Either<Problem, ConfirmedBooking> CreateBooking(BookingRequest bookingRequest)
+{
+    return 
+        from validatedBooking in ValidateBooking(bookingRequest)
+        from bookingNumber in GenerateBookingNumber(bookingRequest)
+        from bookingFees in CalculateFees(validatedBooking)
+        from bookingAcknowledgement in CreateBookingAcknowledgement(bookingRequest, bookingNumber, bookingFees)
+        select new ConfirmedBooking
+        {
+            BookingRequest = bookingRequest,
+            BookingNumber = bookingNumber,
+            BookingAcknowledgement = bookingAcknowledgement,
+        };
+}
+```
+Interestingly the cognitive complexity is 0 for both of the above codes. Despite the first code extract being nested, and is expected to have lower code readability.
+
+Looking deeper into the definition of cognitive complexity metric, the indifference to nesting of the first code is because there are no conditional statements, loops, exception handling, etc [as per page 16 of the white paper](https://www.sonarsource.com/resources/cognitive-complexity/). Cognitive complexity metric counts nested methods and lambdas, but the metric only increases when they are combined with the mentioned elements. In fact to display that, if we add an arbitrary condition in the first code as below, we see cognitive complexity increases to 4.
+```c#
+public static Either<Problem, ConfirmedBooking> CreateBooking(BookingRequest bookingRequest)
+{
+    return validateBooking(bookingRequest)
+        .Bind(validatedBooking => {
+        return generateBookingNumber(validatedBooking)
+            .Bind(bookingNumber => {
+            return calculateFees(validatedBooking)
+                .Bind(bookingFees => {
+                    if(bookingFees.TotalFee < 0.0m)
+                        return Problems.Nofee;
+                return createBookingAcknowledgement(validatedBooking, bookingNumber, bookingFees)
+                    .Map(bookingAcknowledgement => new ConfirmedBooking
+                    {
+                        ValidatedBooking = validatedBooking,
+                        BookingNumber = bookingNumber,
+                        BookingAcknowledgement = bookingAcknowledgement,
                     });
                 });
             });
-    }
-
+        });
+}
+```
 ### Can we use ChatGPT?
 
 Let’s try come with a [prompt](https://lilianweng.github.io/posts/2023-03-15-prompt-engineering/) so we can measure code readability. We are looking for a readability score ranging from 0 to 10. Which 0 is the lowest and 10 is the highest readability. The factors taken into account here are,

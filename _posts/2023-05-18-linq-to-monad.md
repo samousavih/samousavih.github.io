@@ -20,22 +20,22 @@ This article explores how one of the well-known capabilities of C# language, Lin
 ### Story
 
 A hotel booking system architecture was explained on [this](https://medium.com/itnext/specification-pattern-and-how-to-quantify-the-improved-software-stability-9a7cf5a74f1f) article. It has a handful of components. One of those components is called “Booking Creation”. The component is responsible for new bookings in the system. Let’s zoom in to Booking Creation component and see how it works. Here is a code extract which shows the implementation. It contains multiple steps to create a new hotel booking. Each step is a function.
-
-    public static ConfirmedBooking CreateBooking(BookingRequest bookingRequest)
+```c#
+public static ConfirmedBooking CreateBooking(BookingRequest bookingRequest)
+{
+    var validatedBooking = ValidateBooking(bookingRequest);
+    var bookingNumber = GenerateBookingNumber(validatedBooking);
+    var bookingFees = CalculateFees(validatedBooking);
+    var bookingAcknowledgement = CreateBookingAcknowledgement(validatedBooking, bookingNumber, bookingFees);
+    
+    return new ConfirmedBooking
     {
-        var validatedBooking = ValidateBooking(bookingRequest);
-        var bookingNumber = GenerateBookingNumber(validatedBooking);
-        var bookingFees = CalculateFees(validatedBooking);
-        var bookingAcknowledgement = CreateBookingAcknowledgement(validatedBooking, bookingNumber, bookingFees);
-        
-        return new ConfirmedBooking
-        {
-            ValidatedBooking = validatedBooking,
-            BookingNumber = bookingNumber,
-            BookingAcknowledgement = bookingAcknowledgement,
-        };
-    }
-
+        ValidatedBooking = validatedBooking,
+        BookingNumber = bookingNumber,
+        BookingAcknowledgement = bookingAcknowledgement,
+    };
+}
+```
 Here is what each step or function in the code extract does:
 
 1. **Validate the booking request**: As the name suggests, it includes validations on the input request, making sure all of the required fields are provided, etc.
@@ -59,14 +59,14 @@ The code above doesn’t have any error handling. Imagine each step can fail, th
 We can read the above code as CreateBooking function receives a booking request as the argument and returns “Either” a problem or a confirmed booking. Either monad is a member of [Alternative Value Monads](https://louthy.github.io/language-ext/LanguageExt.Core/DataTypes/Alternative%20Value%20Monads/index.html) family.
 
 The type Problem is a simple type containing the details of the error. Here is a code extract of the type.
-
-    public class Problem
-    {
-        public string Title { get; set; }
-        public int Code { get; set; }
-        public string Detail { get; set; }
-    }
-
+```c#
+public class Problem
+{
+    public string Title { get; set; }
+    public int Code { get; set; }
+    public string Detail { get; set; }
+}
+```
 Using Either monad commonly implies using Bind operator to chain(compose) the function steps. Next section shows how we can use this operator.
 
 ### Bind operator and readability problem
@@ -80,26 +80,26 @@ Before applying the Bind function, please see the way the steps are dependent on
 ![Dependency graph for steps in create booking workflow, some of the steps have dependency on one or more steps before them and not just the immediate previous steps.](https://cdn-images-1.medium.com/max/2000/1*jPAjbXzt6jM0iv8i8kLYHg.jpeg)*Dependency graph for steps in create booking workflow, some of the steps have dependency on one or more steps before them and not just the immediate previous steps.*
 
 Now by applying the Bind operator, here is how the create booking function looks like.
-
-    public static Either<Problem, ConfirmedBooking> CreateBooking(BookingRequest bookingRequest)
-    {
-        return ValidateBooking(bookingRequest)
-            .Bind(validatedBooking => {
-            return GenerateBookingNumber(bookingRequest)
-                .Bind(bookingNumber => {
-                return CalculateFees(validatedBooking)
-                    .Bind(bookingFees => {
-                        return CreateBookingAcknowledgement(bookingRequest, bookingNumber, bookingFees)
-                            .Bind<ConfirmedBooking>(bookingAcknowledgement => new ConfirmedBooking {
-                                BookingRequest = bookingRequest,
-                                BookingNumber = bookingNumber,
-                                BookingAcknowledgement = bookingAcknowledgement,
-                            });
-                    });
-            });
+```c#
+public static Either<Problem, ConfirmedBooking> CreateBooking(BookingRequest bookingRequest)
+{
+    return ValidateBooking(bookingRequest)
+        .Bind(validatedBooking => {
+        return GenerateBookingNumber(bookingRequest)
+            .Bind(bookingNumber => {
+            return CalculateFees(validatedBooking)
+                .Bind(bookingFees => {
+                    return CreateBookingAcknowledgement(bookingRequest, bookingNumber, bookingFees)
+                        .Bind<ConfirmedBooking>(bookingAcknowledgement => new ConfirmedBooking {
+                            BookingRequest = bookingRequest,
+                            BookingNumber = bookingNumber,
+                            BookingAcknowledgement = bookingAcknowledgement,
+                        });
+                });
         });
-    }
-
+    });
+}
+```
 The code above is nested. There are 4 levels of nesting. You can count the levels by counting the number of curly brackets. The reason we had to come with the nested code above was the dependency between steps of booking creation function as per the diagram shown before.
 
 The code has poor readability, because it is nested. As we know nested code is one of the reasons for [decreasing readability](https://blog.codinghorror.com/flattening-arrow-code/). And also we know lack of readability can cause other issues, as increased chance of defects, slower and harder to change, etc. So that is the problem. Next let’s see how we can improve this.
@@ -107,22 +107,22 @@ The code has poor readability, because it is nested. As we know nested code is o
 ### Using Linq
 
 Turns out we can utilise Linq to make this simpler. Here is how the Create Booking workflow looks like if we use Linq.
-
-    public static Either<Problem, ConfirmedBooking> CreateBooking(BookingRequest bookingRequest)
-    {
-        return 
-            from validatedBooking in ValidateBooking(bookingRequest)
-            from bookingNumber in GenerateBookingNumber(bookingRequest)
-            from bookingFees in CalculateFees(validatedBooking)
-            from bookingAcknowledgement in CreateBookingAcknowledgement(bookingRequest, bookingNumber, bookingFees)
-            select new ConfirmedBooking
-            {
-                BookingRequest = bookingRequest,
-                BookingNumber = bookingNumber,
-                BookingAcknowledgement = bookingAcknowledgement,
-            };
-    }
-
+```c#
+public static Either<Problem, ConfirmedBooking> CreateBooking(BookingRequest bookingRequest)
+{
+    return 
+        from validatedBooking in ValidateBooking(bookingRequest)
+        from bookingNumber in GenerateBookingNumber(bookingRequest)
+        from bookingFees in CalculateFees(validatedBooking)
+        from bookingAcknowledgement in CreateBookingAcknowledgement(bookingRequest, bookingNumber, bookingFees)
+        select new ConfirmedBooking
+        {
+            BookingRequest = bookingRequest,
+            BookingNumber = bookingNumber,
+            BookingAcknowledgement = bookingAcknowledgement,
+        };
+}
+```
 As we can see there is no nesting in this code. The code is more readable. Additionally, it can extend further to handle more complicated cases. You can add more steps into this workflow without impacting it’s readability.
 
 However, the vanila Linq to object in C# isn’t capable of this. You will need to use an external library.
@@ -150,22 +150,22 @@ Non-monadic functions are functions which are not returning a monadic type. In t
 Resolving similar complexities as shown in the create booking workflow example isn’t a new topic in fully functional languages. F# developers, for example, are used to [computation expressions](https://fsharpforfunandprofit.com/series/computation-expressions/). The pattern is more capable than Linq to monad in C# as it can support a variety of scenarios including conditional branches and loops. Refer to the book [Domain Modeling Made functional](https://www.amazon.com/Domain-Modeling-Made-Functional-Domain-Driven-dp-1680502549/dp/1680502549/ref=mt_other?_encoding=UTF8&me=&qid=1609590428), the section “make life easier with computation expressions”. Having said that, most of the time you can get around that by pushing these extra scenarios into functions. Using Linq to monad is as close as possible we can get to computation expressions at C# 10.
 
 C# already supports computation expressions for handling asynchronous programming since version 5. That is async/await. Before that you would have to use different techniques e.g. using the “Beginxxx” and Endxxx” methods and callbacks. Which using them in complex scenarios would lead to the same code readability problems. Maybe in the future we would see the same happens for error handling. So for the example above you could write code as following.
-
-    public error Either<Problem,ConfirmedBooking> ConfirmedBooking CreateBooking(BookingRequest bookingRequest)
+```c#
+public error Either<Problem,ConfirmedBooking> ConfirmedBooking CreateBooking(BookingRequest bookingRequest)
+{
+    var validatedBooking = result ValidateBooking(bookingRequest);
+    var bookingNumber = result GenerateBookingNumber(validatedBooking);
+    var bookingFees = result CalculateFees(validatedBooking);
+    var bookingAcknowledgement = result CreateBookingAcknowledgement(validatedBooking, bookingNumber, bookingFees);
+    
+    return new ConfirmedBooking
     {
-        var validatedBooking = result ValidateBooking(bookingRequest);
-        var bookingNumber = result GenerateBookingNumber(validatedBooking);
-        var bookingFees = result CalculateFees(validatedBooking);
-        var bookingAcknowledgement = result CreateBookingAcknowledgement(validatedBooking, bookingNumber, bookingFees);
-        
-        return new ConfirmedBooking
-        {
-            ValidatedBooking = validatedBooking,
-            BookingNumber = bookingNumber,
-            BookingAcknowledgement = bookingAcknowledgement,
-        };
-    }
-
+        ValidatedBooking = validatedBooking,
+        BookingNumber = bookingNumber,
+        BookingAcknowledgement = bookingAcknowledgement,
+    };
+}
+```
 Then we would have error/result just like async/await.
 
 ### The source code

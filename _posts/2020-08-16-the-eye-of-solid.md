@@ -4,9 +4,6 @@ title:  "The “eye” of SOLID"
 date:   2020-08-16 21:31:54 +1000
 categories: oop
 ---
-
-Photo by Jarek Ceborski on Unsplash
-
 ### Interface segregation in one sentence
 
 The heart of interface segregation is this phrase “Do not depend on things you do not need”. If you raised your eyebrows you are not wasting your time reading this. To explain why interface segregation means what I mentioned we need to step back a little bit and start with a real-life analogy.
