@@ -5,15 +5,13 @@ date:   2022-06-24 21:31:54 +1000
 categories: oop
 ---
 
-Photo by Nick Bolton on Unsplash
-
 ## Abstract
 
 This article demonstrates how following Common Closure Principle when designing software components speeds up adding new features. It also shows it can decrease the effort and cost to maintain stability throughout the software lifecycle. This is achieved by analysing the impact of two sample feature scenarios in existing architecture.
 
 ## What is CCP
 
-CCP is described in detail in the [Clean Architecture](https://www.amazon.com/Clean-Architecture-Craftsmans-Software-Structure/dp/0134494164) book. It works at the component level. It states classes which are close¹ to the same type of change should be put in the same component. In other words, classes which change because of the same reason and at the same time belong to the same component. Vice versa, classes which change because of different reasons and at different times should be in different components. By following this principle each time we need to change our software the minimum number of components will be affected. Because we already put the classes changed together in the same component. The fewer components we change the fewer deployment required, less version control, less testing and therefore less risk of unexpected behaviour and shorter delivery cycle*.* Moreover, this principle also minimises the effort to understand and find all of the pieces which need to be extended or modified. This is because related parts are as close as possible in the source repository.
+CCP is described in detail in the [Clean Architecture](https://www.amazon.com/Clean-Architecture-Craftsmans-Software-Structure/dp/0134494164) book. It works at the component level. It states classes which are close¹ to the same type of change should be put in the same component. In other words, classes which change because of the same reason and at the same time belong to the same component. Vice versa, classes which change because of different reasons and at different times should be in different components. By following this principle each time we need to change our software the minimum number of components will be affected. Because we already put the classes changed together in the same component. The fewer components we change the fewer deployment required, less version control, less testing and therefore less risk of unexpected behavior and shorter delivery cycle*.* Moreover, this principle also minimises the effort to understand and find all of the pieces which need to be extended or modified. This is because related parts are as close as possible in the source repository.
 
 ## The story
 
