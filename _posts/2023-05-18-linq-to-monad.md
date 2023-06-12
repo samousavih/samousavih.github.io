@@ -125,7 +125,7 @@ public static Either<Problem, ConfirmedBooking> CreateBooking(BookingRequest boo
 ```
 As we can see there is no nesting in this code. The code is more readable. Additionally, it can extend further to handle more complicated cases. You can add more steps into this workflow without impacting it’s readability.
 
-However, the vanila Linq to object in C# isn’t capable of this. You will need to use an external library.
+However, the vanilla Linq to object in C# isn’t capable of this. You will need to use an external library.
 
 ### Which libraries to use?
 

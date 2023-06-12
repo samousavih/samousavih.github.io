@@ -20,7 +20,7 @@ When using a class while writing code, you introduce a dependency to that class 
 
 The principle comes with several benefits. You might have already understood one of them, which is to make it easier to use a class since your mind as a developer does not have to deal with many things at the same time and probably making a mistake.
 
-In addition, once objects in your software just depend on interfaces they need, you achieved loose coupling. This means you can change your software more easily. You can refactor your classes and components knowing that there is less chance of introducing unexpected behaviours.
+In addition, once objects in your software just depend on interfaces they need, you achieved loose coupling. This means you can change your software more easily. You can refactor your classes and components knowing that there is less chance of introducing unexpected behaviors.
 
 ### Does interface here means just “interface”?
 
