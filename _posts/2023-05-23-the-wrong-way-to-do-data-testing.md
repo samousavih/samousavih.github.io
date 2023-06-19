@@ -37,12 +37,60 @@ The migration also was part of a company wide migration into a new data platform
  [idea: what where other migrations across Xero, how did they go? what were their lessons?]
 
 # The testing strategy
+One of the first activities we undertook was devising a test plan. The most important aspect we had in mind was to make sure the new process works exactly the same way as the old one. Therefore, we landed on the following:
 
 - Data tests/source tests
-    - Helped with testing sources schemas as they changed in the platform
+    - To make sure the source data/tables in the new platform are behaving in the same way as the old one and this included
+      - Schema tests, column names, column precisions in the case of decimal numbers,etc.
+      - freshness 
+      - minimum number of rows in source tables
+      - Unique current records :  some of the sources contained record history to show how a specific record changed over time but they must have only one current record.
+      - Duplications
 - Parallel end to end test
+   - The plan was to do a broad end to end test which was to run the new process on the same set of sources as the old pipeline and then compare the results. This way we could test if new pipeline behaves the same way as the old one.[Diagram here]
 - End to end testing
+   - Run the whole pipeline including the parts which were out of scope for migration to make sure it all works.
 
+# Challenging data sources
+Before continuing to describe our testing journey, I should mention that landing data sources into the new data platform was a work in progress. Some of those data sources were relatively larger (several terra bytes) than the others and getting them into the platform was a challenge. Also, the Eligibility pipeline happen to depend on those data sources. The trick to unblock the migration was to bring a static snapshot of each data source into the new platform so we can use them as source. This strategy helped but over time cause the testing progress to hit a roadblock. 
+
+# Date partition
+The old data platform used to ingest the data from sources on a schedule. It would create snapshots of the sources multiple times during a month. Those snapshots were essentially partitioned based on the date they were ingested. Each snapshot was stored in a separate S3 key and each row did have an extra column called Date_Partition. 
+
+
+# Attempt 1: Lets lock in the new sources and run the both pipelines and compare
+The first parallel test attempt was based on date partitions. The idea was the we can pick the same recent date partition for each source table and run can compare the output of old and new pipeline. It turned out that the data sources in the new platform were updated using a different strategy. The data sources were updated on the fly. The data platform would bring any updates as it happened. Therefore, there was no need for data partitioning. The new platform was being updated more frequently. This discrepancy made it impossible to accurately test and compare the two systems because locking in the same input for the pipeline was difficult. Moreover, the new platform also gradually made some improvements on data quality e.g. removed some of the duplications in the old data platform and again this made the like for like comparison between the two pipelines more difficult. 
+[needs a digram]
+<!-- - Daily updates in new platform
+- Expensive to query EMR ( How much?)
+- Not convenient, remote desktop
+- data wouldn't be the same 
+- Some duplications, data quality issues fixed  -->
+
+# Attempt 2: Lets bring a snapshot of old sources to Snowflake so we can run the new pipeline on both and compare
+To make sure we can run the new pipeline on the same data, we decided to bring one of date partitions into the new platform and run the new pipeline on that. Also to make sure we don't have to copy huge amount of data we took a workaround. We created (external tables)[https://docs.snowflake.com/en/user-guide/tables-external-intro] on Snowflake which under the hood were connecting to the same S3 key and buckets which the partitioned data were stored. The external tables were up to 10 times slower. It made it almost impractical to run adhoc queries let alone running the whole pipeline. It was suggest that creating materialised views from those external tables would improve the performance. However, we didn't explore that path. The clock was ticking and we were getting close to the date when old platform was due to be decommissioned.
+# Attempt 3: Let's dump on the Domain person to test it for us
+- Compare histories and look for variances
+- What was different in schemas?
+- Look for a few specific orgs
+- Is the method of comparing histories common? How others do that?
+
+# Source tests:
+ - They were slow
+ - They were costly to run
+ - we initially ran them as we developed later separated them
+
+# Data point tests
+ - Precision tests 
+
+# Code testing
+- Link to other article
+- Most of the code was the same but there were differences 
+    - New platform, new tech stack
+    - Code changes due to handing dates which could be very important in this type of systems 
+    - Schema difference, The changes were gradual 
+- Issues with running the pipeline on your local? with sources could take to hours
+- Makes development quicker
 # Underestimation and human bias
 - What we estimated
 - Why humans underestimate when everything need to go right and over estimate when one thing need to go wrong 
@@ -73,49 +121,6 @@ The migration also was part of a company wide migration into a new data platform
 # Documentation
 - Plans, Audits, ongoing issues, investigation results, technical guides, platform docs, meeting notes, Decision Registers, training docs, solution designs 
 
-# Attempt 1: Lets lock in the new sources and run the both pipelines and compare
-- Date partition issue
-- Daily updates in new platform
-- Expensive to query EMR ( How much?)
-- Not convenient, remote desktop
-- data wouldn't be the same 
-- Some duplications, data quality issues fixed 
-
-# Attempt 2: Lets bring a snapshot of old sources to Snowflake so we can run the new pipeline on both and compare
-- Huge tables (how big?)
-- Data was stored on S3 but external tables in snow flake and they were slow, how slow? why it was slow?
-- even getting a subset of data was time consuming let alone the whole pipeline
-# Attempt 3: Let's dump on the Domain person to test it for us
-- Compare histories and look for variances
-- What was different in schemas?
-- Look for a few specific orgs
-- Is the method of comparing histories common? How others do that?
-
-# Source tests:
- - They were slow
- - They were costly to run
- - we initially ran them as we developed later separated them
-
-# Data point tests
- - Precision tests 
-
-# Code testing
-- Link to other article
-- Most of the code was the same but there were differences 
-    - New platform, new tech stack
-    - Code changes due to handing dates which could be very important in this type of systems 
-    - Schema difference, The changes were gradual 
-- Issues with running the pipeline on your local? with sources could take to hours
-- Makes development quicker
-
-# migrating at the same time as data platform itself is evolving 
-- show a diagram of rate of changes in the platform and when we migrated, question for data platform eng. do you do that again?
-- It would be impractical to migrate too late since huge costs, 
-- show the sweet spot between cost of running legacy systems vs cost of migrating into the new system
-- Early learning and feedback, this won't be achieved if migration happens when we think everything is ready
-- But painful for end users
-- Ask someone in management how did they decide when to allow for others joining the new platform?
-
 # Some values can overflow, how to use float instead of numbers?
 - How float and numeric types are different? 
 
@@ -125,7 +130,7 @@ The migration also was part of a company wide migration into a new data platform
 - How to know if your workload would benefit from larger Warehouse?
 - Autoscale Warehouse
     - How this can be done in dbt
-- Monitor quereis in snowflake and if there disk spilling, attention needed, and sometimes Warehouse sizing is a solution [https://community.snowflake.com/s/article/Performance-impact-from-local-and-remote-disk-spilling]
+- Monitor queries in snowflake and if there disk spilling, attention needed, and sometimes Warehouse sizing is a solution [https://community.snowflake.com/s/article/Performance-impact-from-local-and-remote-disk-spilling]
 
 # Confusion on history and why everyone where looking for a reason (When things make sense it is not necessary true)
 - Did the new code's behavior changed by change of data schema?(this is ridiculous)
@@ -136,6 +141,13 @@ The migration also was part of a company wide migration into a new data platform
 - was handed over to another team
 - The team was disbanded and the projects axed
 
+# Migrations
+- show a diagram of rate of changes in the platform and when we migrated, question for data platform eng. do you do that again?
+- It would be impractical to migrate too late since huge costs, 
+- show the sweet spot between cost of running legacy systems vs cost of migrating into the new system
+- Early learning and feedback, this won't be achieved if migration happens when we think everything is ready
+- But painful for end users
+- Ask someone in management how did they decide when to allow for others joining the new platform?
 # Conclusion
 - Start early
 - Write tests
