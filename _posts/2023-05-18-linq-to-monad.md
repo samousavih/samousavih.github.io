@@ -44,9 +44,9 @@ Here is what each step or function in the code extract does:
 
 1. **Calculate fees**: Calculates the fees based on type of the room, extras, discounts, etc.
 
-1. **Create a booking acknowledgment** : This step creates an event which would be passed in to the caller of the function, so then used as a notification to the rest of the system. To read more about this pattern refer to the book [Domain Modeling Made functional](https://www.amazon.com/Domain-Modeling-Made-Functional-Domain-Driven-dp-1680502549/dp/1680502549/ref=mt_other?_encoding=UTF8&me=&qid=1609590428), the section “communication between bounded contexts”.
+1. **Create a booking acknowledgment**: This step creates an event which would be passed in to the caller of the function, so then used as a notification to the rest of the system. To read more about this pattern refer to the book [Domain Modeling Made functional](https://www.amazon.com/Domain-Modeling-Made-Functional-Domain-Driven-dp-1680502549/dp/1680502549/ref=mt_other?_encoding=UTF8&me=&qid=1609590428), the section “communication between bounded contexts”.
 
-1. **Return confirmed booking: **The step packs all of results of previous steps and returns a confirmed booking, this is the last step in the workflow.
+1. **Return confirmed booking**:The step packs all of results of previous steps and returns a confirmed booking, this is the last step in the workflow.
 
 We won’t go through each step and how they are implemented as it is not relevant to the topic of this article. However, it is not difficult to imagine how each function would be implemented.
 

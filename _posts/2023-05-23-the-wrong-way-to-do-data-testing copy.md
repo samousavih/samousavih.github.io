@@ -1,6 +1,6 @@
 ---
 layout: post
-title:  "Migrations are hard, data pipeline migrations are even harder"
+title:  "Data pipeline migrations are even harder : The story of a data pipeline migration with focus on testing" 
 date:   2023-05-23 21:31:54 +1000
 categories: data
 ---
@@ -85,7 +85,7 @@ We speculated although couldn't be sure the the following were contributing to t
 - Look for a few specific orgs
 - Is the method of comparing histories common? How others do that? -->
 
-# Lake of domain knowledge and impact on testing
+# Lack of domain knowledge and impact on testing
 Many steps of the legacy pipeline including transformation stage was developed and maintained for a while by only one person. Those steps contained complex SQL and python code which happened to be the key part of the pipeline and at the core of migration.
 
 We also knew that the time is short, so the strategy for migration was to keep the changes to the pipeline at the absolute minimum and do what we have to do so we remove the dependency on the legacy data platform.
@@ -97,76 +97,65 @@ As discussed before, testing sources were a priority for us. These tests were wr
 
 Despite all of the challenges with source tests, they had some benefits. They helped us identify changes in source tables as they were evolving. By just running all of the source tests we were able to highlight what was different between legacy sources and new sources while some of the discrepancies were not documented necessarily well.
 
+# Testing Grid
+We are all familiar with the famous (test pyramid)[https://martinfowler.com/articles/practical-test-pyramid.html] which gives us an idea of how we should focus our effort when it comes to testing software. When it comes to data intensive applications the similar idea is described using a (Test Grid)[https://www.thoughtworks.com/en-au/insights/blog/testing/practical-data-test-grid]. The data test grid depicts testing effort across two axises, code and data.
+Despite you can still think about testing data on it's own e.g. source data quality tests, often you are facing a mixture of data and code. Depending how broad the code scope is from a single sql query to the whole data pipeline or how specific is the data involved in test you can categorise your tests. For example a point unit test only tests a small part of the data pipeline and for just enough data and columns which covers a specific scenario and a global E2E tests would include the whole pipeline with maximum size of data most likely in an environment similar to production.
 
-# Code testing
-- Could ask the domain person to help us write test scenarios
-- Link to other article
-- Most of the code was the same but there were differences 
+Also, to map the test varieties for the Eligibility pipeline on Testing Grid. We can draw the diagram below[digram]. As you can see the test effort was not focussed proportionally.
+
+# Reasons that we focused on global E2E tests 
+- Lack of domain knowledge
+   - why? how?
+   - Could ask the domain person to help us write test scenarios, shift left tests
+- Lack of knowledge and experience with the new tech stack
+- It is quicker with global E2E tests 
+   - What is code testing and how would that help?
+   - We could test correctness of the pipeline without the impact of data source changes and pollutions, using CSVs
+   - Makes development quicker, TDD, and less costly as we don't have to run the pipeline on local against a big data source
+- Underestimating the code changes or most of the code was the same but there were differences 
+    - The code gradually changed 
     - New platform, new tech stack
     - Code changes due to handing dates which could be very important in this type of systems 
     - Schema difference, The changes were gradual 
-- Issues with running the pipeline on your local? with sources could take to hours
-- Makes development quicker
-# Underestimation and human bias
-- What we estimated
-- Why humans underestimate when everything need to go right and over estimate when one thing need to go wrong 
-- Explain what that means in this context and what needed to go right
-    - Data should be migrated for testing
-    - Data should have been comparable
-    - Can identify the discrepancies
-    - Can fix it
-    - The source schema shouldn't change
-    - The person who had the domain knowledge wouldn't leave
-    - And many other things that needed to go right but we didn't even think of
-- Show initial Estimate vs actual estimate
-- Show the migration part vs test part
-# Risk register
-- what could go wrong
-# Comms
-- Weekly meetings with platform team/teams
-- Shared slack channels
-# Keeping the Scope minimal, lift and shift
-- No automations
-- minimal tech stacks
-- No CI/CD
-- Ignore multiple env
-  - made things sometimes more complicated
-- made us underestimate testing
-- 
+- Underestimating the time spent on running the pipeline on local? with fulls sources
+- Underestimating the costs of running the pipeline on local? with fulls sources
 
-# Documentation
-- Plans, Audits, ongoing issues, investigation results, technical guides, platform docs, meeting notes, Decision Registers, training docs, solution designs 
+# How we could have written tests
+- How to write point unit tests? 
+- How to write service sample tests 
+- Examples of each
+- Show diagram for each tests type and explain
 
-# Some values can overflow, how to use float instead of numbers?
-- How float and numeric types are different? 
+# Sample/Global E2E tests using Zero clone copy
 
-# The bigger Warehouse doesn't mean more expensive  
-- [you need to pick a size before running] [https://docs.snowflake.com/en/user-guide/warehouses-considerations]
-- Warehouse sizes and costs
-- How to know if your workload would benefit from larger Warehouse?
-- Autoscale Warehouse
-    - How this can be done in dbt
-- Monitor queries in snowflake and if there disk spilling, attention needed, and sometimes Warehouse sizing is a solution [https://community.snowflake.com/s/article/Performance-impact-from-local-and-remote-disk-spilling]
+# But many point unit tests are a lot of effort
+- Exercise is a lot of effort,
+- Eating well is not easy, etc
+- Over estimate how your body can continue work
 
-# Confusion on history and why everyone where looking for a reason (When things make sense it is not necessary true)
-- Did the new code's behavior changed by change of data schema?(this is ridiculous)
-- Would code testing helped?
-- Did we need a more traceable pipeline?
+# How others done it?
 
-# The whole project was put on hold and now we never know
-- was handed over to another team
-- The team was disbanded and the projects axed
+- What was missing? Code testing? Lets dig into that?
+- Repos to study
+   - https://github.dev.xero.com/Xero/XeroGoRevenueTransforms
+      - uses sample/point unit tests using dbt_unit_testing
+   - https://github.dev.xero.com/Xero/xade_dbt_pia
+      - sample service tests by seeds and some sample/point test using dbt_unit_testing
+   - https://github.dev.xero.com/4Xero/EIS.Standards/ 
+      - point unit tests using dbt_unit_testing
+      - global service tests using dbt singular tests
+      - Zero clone copy
+   - https://github.dev.xero.com/sbi/xsbi-pipeline-xade
+      - global tests
+      - they have multiple pipeline stages which each has a set of source tests:how this works? [Talk to someone]
+   - https://github.dev.xero.com/Xero/dt-cups-data-pipeline
+      - sample E2E using seeds/Csvs 
+   - Payments?
+   - Others across Xero?
+# Challenges of data pipeline testing
+- They need DB which is sometimes remote
+- point unit test is different than software unit tests 
 
-# Data point tests
- - Precision tests 
-
-# Migrations
-- show a diagram of rate of changes in the platform and when we migrated, question for data platform eng. do you do that again?
-- It would be impractical to migrate too late since huge costs, 
-- show the sweet spot between cost of running legacy systems vs cost of migrating into the new system
-- Early learning and feedback, this won't be achieved if migration happens when we think everything is ready
-- But painful for end users
-- Ask someone in management how did they decide when to allow for others joining the new platform?
 # Conclusion
 - Start early
 - Write tests
