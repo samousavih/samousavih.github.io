@@ -2,6 +2,7 @@
 layout: post
 title:  "Linq to Monad: Practical approaches to handle async and non-monadic functions"
 date:   2023-04-18 21:31:54 +1000
+thumbnail: https://cdn-images-1.medium.com/max/2048/1*j65KedocsoH9e_vHUtjl-Q.png
 categories: fop
 ---
 

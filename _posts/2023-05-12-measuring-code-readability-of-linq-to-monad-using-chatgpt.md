@@ -2,6 +2,7 @@
 layout: post
 title:  "Measuring Code Readability of Linq to Monad using ChatGPT"
 date:   2023-05-12 21:31:54 +1000
+thumbnail: https://cdn-images-1.medium.com/max/2048/1*EVCcwd1HXO1o4dgy_MqCFA.png
 categories: fop
 ---
 
