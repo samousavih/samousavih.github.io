@@ -32,7 +32,7 @@ permalink: /
           {% endfor %}
         </div>
         </p>
-        <a href="/posts">See more posts ...</a>
+        <a href="/articles">See more posts ...</a>
     </div>
   </div>
 </div>

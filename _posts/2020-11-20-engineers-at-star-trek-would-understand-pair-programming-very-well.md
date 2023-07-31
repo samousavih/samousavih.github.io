@@ -2,6 +2,8 @@
 layout: post
 title:  "Engineers at Star Trek would understand Pair Programming very well"
 date:   2020-11-20 21:31:54 +1000
+thumbnail: https://cdn-images-1.medium.com/max/2000/1*vcfh2aYnjUSZP2chOoVXCQ.jpeg
+tags: [Pair Programming]
 categories: software-practices
 ---
 

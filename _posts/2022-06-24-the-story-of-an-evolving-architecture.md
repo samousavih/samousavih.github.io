@@ -2,9 +2,15 @@
 layout: post
 title:  "Common Closure Principle: The story of an evolving architecture"
 date:   2022-06-24 21:31:54 +1000
+thumbnail: /images/common-closure-principle-the-story-of-an-evolving-architecture.jpg
+tags: [Pair Programming]
 categories: oop
 ---
+How Common Closure Principle lead us to better design
 
+![](/images/common-closure-principle-the-story-of-an-evolving-architecture.jpg)
+
+Photo by [Nick Bolton](https://unsplash.com/@nickrbolton) on Unsplash
 ## Abstract
 
 This article demonstrates how following Common Closure Principle when designing software components speeds up adding new features. It also shows it can decrease the effort and cost to maintain stability throughout the software lifecycle. This is achieved by analysing the impact of two sample feature scenarios in existing architecture.

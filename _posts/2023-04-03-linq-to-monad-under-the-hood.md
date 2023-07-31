@@ -2,8 +2,13 @@
 layout: post
 title:  "How Linq to Monad works under the hood in C#"
 date:   2023-04-03 21:31:54 +1000
+thumbnail: /images/linq-under-the-hood.jpg
+tags: [linq, functional programming]
 categories: fop
 ---
+Deep dive into Linq to Monads and how they work
+
+![](/images/linq-under-the-hood.jpg)
 ### Abstract
 
 This is a deep dive into how Linq to monad works. We try to cover that in the simplest terms and with plenty of examples. We would also discuss how it relates to the Linq to object in C# which typically used for enumerables.

@@ -2,9 +2,15 @@
 layout: post
 title:  "Specification Pattern and how to quantify the improved software stability"
 date:   2020-08-07 21:31:54 +1000
+thumbnail: /images/specification-pattern-and-how-to-quantify-the-improved-software-stability.jpg
+tags: [Entity Framework, oo]
 categories: oop
 ---
 
+
+![](/images/specification-pattern-and-how-to-quantify-the-improved-software-stability.jpg)
+
+Photo by [Markus Spiske](https://unsplash.com/@markusspiske) on [Unsplash](https://unsplash.com/s/photos/stability)
 ### Abstract
 
 Using stability and abstraction metrics we can measure how stable a software architecture is. To show those metrics in action, I will display step by step how to apply the metrics and how utilising a design pattern can improve them. The design pattern I will use is Specification Pattern.
