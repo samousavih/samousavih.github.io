@@ -3,6 +3,7 @@ author: Amin Mousavi
 email: samousavih@gmail.com
 description: >- # this means to ignore newlines until "baseurl:"
   If you cannot explain something in simple terms, you don't understand it.(Feynman)
+logo: /assets/favicon.png
 navbar-links:
   About Me: "about"
 baseurl: "" # the subpath of your site, e.g. /blog
