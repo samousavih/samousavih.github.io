@@ -13,11 +13,11 @@ Making Linq to monad work in production code when things don’t play well
 
 ### Background
 
-[Linq to monad](https://medium.com/itnext/improving-code-readability-in-functional-c-using-linq-to-monad-d4c73194e9b1) is an approach to write more readable code when working with monads. It works well when all of the functions are returning a monadic type and the type is the same. However, in production code, often we are facing a variety of different functions which are not monadic or they are returning a derivative of the monadic type, e.g async functions. In this article we are discussing different practical approaches, so we can seamlessly handle those functions in the Linq expression.
+[Linq to monad]({% link _posts/2023-05-18-linq-to-monad.md %}) is an approach to write more readable code when working with monads. It works well when all of the functions are returning a monadic type and the type is the same. However, in production code, often we are facing a variety of different functions which are not monadic or they are returning a derivative of the monadic type, e.g async functions. In this article we are discussing different practical approaches, so we can seamlessly handle those functions in the Linq expression.
 
 ### Story
 
-[This](https://medium.com/@amin_mousavi/improving-readability-by-using-linq-instead-of-bind-operator-in-functional-c-d4c73194e9b1) article covers the Create Booking workflow in a hotel booking system. Also, from the same article we know we can utilise Linq to improve readability. The following code extract from the article displays the workflow using Linq to monad when all of the functions are returning an “Either” type.
+[This]({% link _posts/2023-05-18-linq-to-monad.md %}) article covers the Create Booking workflow in a hotel booking system. Also, from the same article we know we can utilise Linq to improve readability. The following code extract from the article displays the workflow using Linq to monad when all of the functions are returning an “Either” type.
 ```c#
     public static Either<Problem, ConfirmedBooking> CreateBooking(BookingRequest bookingRequest)
     {
@@ -178,7 +178,7 @@ The second SelectMany function is for when in two consequent workflow steps, the
 
 And the last one is the opposite of the second one, it is for when the first workflow step returning Task<Either<L, R2>> and the second step returning Either<L, R>.
 
-As you can see, we are covering all of the different combinations of types when they are used consequently in a Linq expression. The number of these combinations, can significantly surge as more types you are trying to cover. To fully understand how SelectMany helps here have a look at [this](https://itnext.io/how-linq-to-monad-works-under-the-hood-in-c-55e301943673) article.
+As you can see, we are covering all of the different combinations of types when they are used consequently in a Linq expression. The number of these combinations, can significantly surge as more types you are trying to cover. To fully understand how SelectMany helps here have a look at [this]({% link _posts/2023-04-03-linq-to-monad-under-the-hood.md %}) article.
 
 After applying the extensions above, the Create Booking example would look like the following code extract.
 ```c#

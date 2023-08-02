@@ -21,7 +21,7 @@ This article explores how one of the well-known capabilities of C# language, Lin
 
 ### Story
 
-A hotel booking system architecture was explained on [this](https://medium.com/itnext/specification-pattern-and-how-to-quantify-the-improved-software-stability-9a7cf5a74f1f) article. It has a handful of components. One of those components is called “Booking Creation”. The component is responsible for new bookings in the system. Let’s zoom in to Booking Creation component and see how it works. Here is a code extract which shows the implementation. It contains multiple steps to create a new hotel booking. Each step is a function.
+A hotel booking system architecture was explained on [this]({% link _posts/2020-08-07-specification-pattern-and-how-to-quantify-the-improved-software-stability.md %} ) article. It has a handful of components. One of those components is called “Booking Creation”. The component is responsible for new bookings in the system. Let’s zoom in to Booking Creation component and see how it works. Here is a code extract which shows the implementation. It contains multiple steps to create a new hotel booking. Each step is a function.
 ```c#
 public static ConfirmedBooking CreateBooking(BookingRequest bookingRequest)
 {
@@ -42,13 +42,13 @@ Here is what each step or function in the code extract does:
 
 1. **Validate the booking request**: As the name suggests, it includes validations on the input request, making sure all of the required fields are provided, etc.
 
-1. **Generate a booking number**: This step based on the data in the request creates a unique number or id for the request, which users can use for their possible future inquiries.
+2. **Generate a booking number**: This step based on the data in the request creates a unique number or id for the request, which users can use for their possible future inquiries.
 
-1. **Calculate fees**: Calculates the fees based on type of the room, extras, discounts, etc.
+3. **Calculate fees**: Calculates the fees based on type of the room, extras, discounts, etc.
 
-1. **Create a booking acknowledgment**: This step creates an event which would be passed in to the caller of the function, so then used as a notification to the rest of the system. To read more about this pattern refer to the book [Domain Modeling Made functional](https://www.amazon.com/Domain-Modeling-Made-Functional-Domain-Driven-dp-1680502549/dp/1680502549/ref=mt_other?_encoding=UTF8&me=&qid=1609590428), the section “communication between bounded contexts”.
+4. **Create a booking acknowledgment**: This step creates an event which would be passed in to the caller of the function, so then used as a notification to the rest of the system. To read more about this pattern refer to the book [Domain Modeling Made functional](https://www.amazon.com/Domain-Modeling-Made-Functional-Domain-Driven-dp-1680502549/dp/1680502549/ref=mt_other?_encoding=UTF8&me=&qid=1609590428), the section “communication between bounded contexts”.
 
-1. **Return confirmed booking**:The step packs all of results of previous steps and returns a confirmed booking, this is the last step in the workflow.
+5. **Return confirmed booking**:The step packs all of results of previous steps and returns a confirmed booking, this is the last step in the workflow.
 
 We won’t go through each step and how they are implemented as it is not relevant to the topic of this article. However, it is not difficult to imagine how each function would be implemented.
 
@@ -139,13 +139,13 @@ Yes you can, in fact the implementation is not complicated. So if you want the m
 
 ### What? How is this possible?
 
-If you want to fully understand how Linq is doing the magic and how it is implemented, [here](https://medium.com/@amin_mousavi/how-linq-to-monad-works-under-the-hood-55e301943673) is a how the implementation works in full details.
+If you want to fully understand how Linq is doing the magic and how it is implemented, [here]({% link _posts/2023-04-03-linq-to-monad-under-the-hood.md %}) is a how the implementation works in full details.
 
 ### What if I had Async functions and Non-monadic functions?
 
 Non-monadic functions are functions which are not returning a monadic type. In the context of error handling and more specifically Either monad this means the function would not return an Either type. Said other way, the function never returns a problem and always returns a value.
 
-[language-ext](https://github.com/louthy/language-ext) and [CSharpFunctionalExtensions](https://github.com/vkhorikov/CSharpFunctionalExtensions) are supporting async and non-monadic functions. Using those libraries you might still need to write more extensions to utilise Linq seamlessly. [This](https://medium.com/itnext/linq-to-monad-practical-approaches-to-handle-async-and-non-monadic-functions-fc579da91071) article addresses the issue in more details. Also have a look at this [code repository](https://github.com/samousavih/HotelBookingSystem/tree/computational-expression/BookingCreation) for various examples.
+[language-ext](https://github.com/louthy/language-ext) and [CSharpFunctionalExtensions](https://github.com/vkhorikov/CSharpFunctionalExtensions) are supporting async and non-monadic functions. Using those libraries you might still need to write more extensions to utilise Linq seamlessly. [This]({% link _posts/2023-04-18-linq-to-monad-practical-approaches-to-handle-async-and-non-monadic-functions.md %}) article addresses the issue in more details. Also have a look at this [code repository](https://github.com/samousavih/HotelBookingSystem/tree/computational-expression/BookingCreation) for various examples.
 
 ### Discussions
 

@@ -34,7 +34,7 @@ public Either<Problem, ConfirmedBooking> CreateBooking(BookingRequest bookingReq
 ```
 
 Utilising Linq, to write the expressions as above, which operate on Either monad, requires implementing the following extension. The function we are implementing is SelectMany.
-
+```c#
     public static class EitherExtension
     {
         public static Either<L, V> SelectMany<U, V, L, R>(
@@ -44,7 +44,7 @@ Utilising Linq, to write the expressions as above, which operate on Either monad
               return first.Bind(a => getSecond(a).Map(b => project(a, b)));
         }
     }
-
+```
 The question we are addressing in this article is how that actually works. What is the connection between Linq expression and SelectMany function and how SelectMany function should be implemented for Linq to work with Either monad.
 
 ### How Linq expressions are translated in SelectMany form

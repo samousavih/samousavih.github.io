@@ -29,11 +29,13 @@ Finally, each time we want to apply a change we would need to know what are the 
 
 Each component also consists of a set of classes which are displayed in the mentioned diagram as well. Inside booking creation, we have a class to calculate fees and costs for a booking. Also, a class which validates a booking, for example, it makes sure the number of people doesn’t exceed the capacity of rooms. Booking amendment also has a validation class which has its own logic. Consequently, the booking documents component includes classes which calculate which documents and with what content is required for both booking creation and amendment. Moreover, it also has another class to convert documents to pdf and another one to store them in blob storage. Similarly, booking registry also has classes for calculating registry records required for booking creation and booking amendment. It also has a class which helps with the retrieval of those records; this class does not depend on the type of operations and just returns whatever records are available with a given id.
 
-![diagram 1](https://cdn-images-1.medium.com/max/2000/1*9Yw3GMsUC4a96uNB1BIWzw.jpeg)*diagram 1*
+![diagram 1](https://cdn-images-1.medium.com/max/2000/1*9Yw3GMsUC4a96uNB1BIWzw.jpeg)
+*diagram 1*
 
 After showing which components we are dealing with let’s have a look at interactions among them. The interactions are easy to understand as displayed in the next diagram (diagram 2). Booking creation and booking amendment components initiate the call to the other two components to create documents and store the required records. As a part of the call they send the details of a new booking or in the case of amendment details of an amendment. The callee components would have the rules and logic to create documents or save the records with required values.
 
-![diagram 2](https://cdn-images-1.medium.com/max/2000/1*bosKSaLRr5c3-a4d8wtHRw.jpeg)*diagram 2*
+![diagram 2](https://cdn-images-1.medium.com/max/2000/1*bosKSaLRr5c3-a4d8wtHRw.jpeg)
+*diagram 2*
 
 ## Feature scenarios
 
@@ -43,13 +45,15 @@ The main challenge in every architecture is unpredictable changes. This section 
 
 The first new requirement is considering a fee each time a booking amendment happens. To apply this into our software we need to change a few components. Firstly, the booking amendment needs to have the logic which calculates the total fee based on the details of each amendment. Secondly, the booking amendment documents must reflect the incurred fee. And lastly, the booking registry now needs to store the calculated fee in its records. These changes have to be applied to all three components. We need to test, redeploy and version all three components. The next diagram (diagram 3) displays the changing classes in a different colour.
 
-![diagram 3](https://cdn-images-1.medium.com/max/2000/1*zJ1OYtfw634X0izu-1B2Bw.jpeg)*diagram 3*
+![diagram 3](https://cdn-images-1.medium.com/max/2000/1*zJ1OYtfw634X0izu-1B2Bw.jpeg)
+*diagram 3*
 
 ## Promotion code for a booking
 
 The second change is a promotion code for booking. Different promotion codes can be used by users, and each would have a different discount for creation of a booking. Therefore, we will have to change the booking creation component to calculate the discounted fee if there is a promotion code. Also, we will need to modify the code for generating booking documents to show the discount when we are creating a booking. And also, we have to change the code for booking registry components to store the promotion code whenever the operation is booking creation and includes a promotion code. These changes also are displayed in the following diagram (diagram 4).
 
-![diagram 4](https://cdn-images-1.medium.com/max/2000/1*6DjhWYO9PG9qgbKg9oBnEQ.jpeg)*diagram 4*
+![diagram 4](https://cdn-images-1.medium.com/max/2000/1*6DjhWYO9PG9qgbKg9oBnEQ.jpeg)
+*diagram 4*
 
 ## CCP violation
 
@@ -59,11 +63,13 @@ As you can see, in the first scenario we had to apply a change to the booking do
 
 Let’s see how we can minimise the effect of change by applying CCP. Minimising the effect of change in this context means minimising the number of components needed to change. To apply CCP let’s move the classes which change at the same time and with the same reason to the same component. To achieve that, for the first requirement we should move the booking amendment document and booking amendment record classes into the booking amendment component. This would alter interfaces between the two components which I won’t go into the details as that is a topic for another article. The new architecture is displayed in diagram 5 after mentioned refactoring. Now, all we need to change is just one component which is the booking amendment.
 
-![diagram 5](https://cdn-images-1.medium.com/max/2000/1*pbgh_p69cNZ35-yps8PNfA.jpeg)*diagram 5*
+![diagram 5](https://cdn-images-1.medium.com/max/2000/1*pbgh_p69cNZ35-yps8PNfA.jpeg)
+*diagram 5*
 
 For the second requirement, you can easily guess what we need to do. Here is the final diagram.
 
-![diagram 6](https://cdn-images-1.medium.com/max/2000/1*q1bGmvFb7pC64wWQ3MArFQ.jpeg)*diagram 6*
+![diagram 6](https://cdn-images-1.medium.com/max/2000/1*q1bGmvFb7pC64wWQ3MArFQ.jpeg)
+*diagram 6*
 
 The architecture in diagram 6 would keep the changes needed after applying the two requirements minimised as we just need to modify one component in each. Moreover, it would be easier to understand the code as every business rule and logic related to creating a booking resides inside the booking creation component and respectively the same for the booking amendment component.
 
@@ -77,4 +83,4 @@ It is also almost impossible to predict what changes may come, so an adapting an
 
 ²*The software system I experienced was different and had a completely different purpose. I made up a booking system because we are all familiar with its logic. However, the complexity is the same and the same principles would apply for both*.
 
-³*These documents are like reports which are pre-generated in pdf format and stored in blob storage.*
+³*These documents are like reports which are pre-generated in pdf format and stored in blob storage.
