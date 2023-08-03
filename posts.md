@@ -6,23 +6,24 @@ permalink: /articles/
 
 <div class="row">
   {% for post in site.posts %}
-  <div class="span4">
-    <a href="{{ BASE_PATH }}{{ post.url }}"><h2>{{ post.title }}</h2></a>
-	<p>{% if post.thumbnail %}
-	<img src="{{ post.thumbnail }}" style="height: 280px" align="center" />
+  <div class="span4" style="margin-bottom: 4px; margin-top: 4px;">
+   <div style="display: flex; flex-direction: row; justify-content: space-between;">
+    <div>
+		<a href="{{ BASE_PATH }}{{ post.url }}"><h3>{{ post.title }}</h3></a>
+		{% if post.excerpt %}
+		<div>
+		{{ post.excerpt | strip_html  }}
+		</div>
+		{% endif %}
+		<a class="btn" href="{{ BASE_PATH }}{{ post.url }}">Read more...</a>
+	</div>
+	{% if post.thumbnail %}
+	<img src="{{ post.thumbnail }}" style="height: 100px" align="center" />
 	{% else %}
-	<img src="/images/nothumbnail.jpg"
-  style="height: 280px" align="center" />
+	<img src="/images/nothumbnail.jpg" style="height: 100px" align="center" />
 	{% endif %}
-	</p>
-	{% if post.excerpt %}
-	<p>
-	{{ post.excerpt | strip_html  }}
-	</p>
-	{% endif %}
-	<p>
-	<a class="btn" href="{{ BASE_PATH }}{{ post.url }}">Read more...</a>
-	</p>
+	</div>
   </div>
+  <hr/>
   {% endfor %}
 </div>
