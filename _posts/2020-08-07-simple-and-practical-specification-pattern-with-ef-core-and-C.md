@@ -2,10 +2,15 @@
 layout: post
 title:  "Simple and practical specification pattern with EF Core and C#"
 date:   2020-08-07 21:31:54 +1000
+thumbnail: /images/teo-d-4op9_2Bt2Eg-unsplash.jpg
+tags: [Entity Framework, oo]
 categories: oop
 ---
 
 ![Header Image](/images/teo-d-4op9_2Bt2Eg-unsplash.jpg)
+
+Photo by <a href="https://unsplash.com/@teowithacamera?utm_source=unsplash&utm_medium=referral&utm_content=creditCopyText">Teo D</a> on <a href="https://unsplash.com/photos/4op9_2Bt2Eg?utm_source=unsplash&utm_medium=referral&utm_content=creditCopyText">Unsplash</a>
+  
 
 ## Abstract
 
@@ -13,7 +18,7 @@ Here I address how to implement specification pattern in C#. The key to more eff
 
 ### Implementing specifications
 
-In [this article](https://medium.com/dev-genius/common-closure-principle-the-story-of-an-evolving-architecture-6919b452c8db), I described a hotel booking system and its components. Also, [here](https://itnext.io/specification-pattern-and-how-to-quantify-the-improved-software-stability-9a7cf5a74f1f) I explained how the [specification pattern](https://en.wikipedia.org/wiki/Specification_pattern) improved that architecture. In the current story, I will address how to implement a query handler which utilises this pattern. The framework of choice is EF Core and the language is C#.
+In [this article]({% link _posts/2022-06-24-the-story-of-an-evolving-architecture.md %}), I described a hotel booking system and its components. Also, [here]({% link _posts/2020-08-07-specification-pattern-and-how-to-quantify-the-improved-software-stability.md %}) I explained how the [specification pattern](https://en.wikipedia.org/wiki/Specification_pattern) improved that architecture. In the current story, I will address how to implement a query handler which utilises this pattern. The framework of choice is EF Core and the language is C#.
 
 The main part of the specification pattern is an abstract specification class. Let’s see how we can implement that using C#.
 

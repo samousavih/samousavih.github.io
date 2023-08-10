@@ -2,8 +2,13 @@
 layout: post
 title:  "How Linq to Monad works under the hood in C#"
 date:   2023-04-03 21:31:54 +1000
+thumbnail: /images/linq-under-the-hood.jpg
+tags: [linq, functional programming]
 categories: fop
 ---
+Deep dive into Linq to Monads and how they work
+
+![](/images/linq-under-the-hood.jpg)
 ### Abstract
 
 This is a deep dive into how Linq to monad works. We try to cover that in the simplest terms and with plenty of examples. We would also discuss how it relates to the Linq to object in C# which typically used for enumerables.
@@ -29,7 +34,7 @@ public Either<Problem, ConfirmedBooking> CreateBooking(BookingRequest bookingReq
 ```
 
 Utilising Linq, to write the expressions as above, which operate on Either monad, requires implementing the following extension. The function we are implementing is SelectMany.
-
+```c#
     public static class EitherExtension
     {
         public static Either<L, V> SelectMany<U, V, L, R>(
@@ -39,7 +44,7 @@ Utilising Linq, to write the expressions as above, which operate on Either monad
               return first.Bind(a => getSecond(a).Map(b => project(a, b)));
         }
     }
-
+```
 The question we are addressing in this article is how that actually works. What is the connection between Linq expression and SelectMany function and how SelectMany function should be implemented for Linq to work with Either monad.
 
 ### How Linq expressions are translated in SelectMany form

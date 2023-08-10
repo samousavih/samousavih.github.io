@@ -2,8 +2,16 @@
 layout: post
 title:  "The “eye” of SOLID"
 date:   2020-08-16 21:31:54 +1000
+thumbnail: /images/jarek-ceborski-AhS-kgzp600-unsplash.jpg
+tags: [Entity Framework, oo]
 categories: oop
 ---
+Interface segregation for a five year old
+
+![](/images/jarek-ceborski-AhS-kgzp600-unsplash.jpg)
+
+Photo by <a href="https://unsplash.com/@jarson?utm_source=unsplash&utm_medium=referral&utm_content=creditCopyText">Jarek Ceborski</a> on <a href="https://unsplash.com/photos/AhS-kgzp600?utm_source=unsplash&utm_medium=referral&utm_content=creditCopyText">Unsplash</a>
+
 ### Interface segregation in one sentence
 
 The heart of interface segregation is this phrase “Do not depend on things you do not need”. If you raised your eyebrows you are not wasting your time reading this. To explain why interface segregation means what I mentioned we need to step back a little bit and start with a real-life analogy.
@@ -20,7 +28,7 @@ When using a class while writing code, you introduce a dependency to that class 
 
 The principle comes with several benefits. You might have already understood one of them, which is to make it easier to use a class since your mind as a developer does not have to deal with many things at the same time and probably making a mistake.
 
-In addition, once objects in your software just depend on interfaces they need, you achieved loose coupling. This means you can change your software more easily. You can refactor your classes and components knowing that there is less chance of introducing unexpected behaviours.
+In addition, once objects in your software just depend on interfaces they need, you achieved loose coupling. This means you can change your software more easily. You can refactor your classes and components knowing that there is less chance of introducing unexpected behaviors.
 
 ### Does interface here means just “interface”?
 

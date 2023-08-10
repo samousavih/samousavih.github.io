@@ -1,0 +1,40 @@
+.container {
+    display: flex;
+    flex-wrap: wrap;
+  }
+
+  .profile-details {
+    flex: 1;
+    margin-right: 20px;
+    order: 1;
+  }
+
+  .profile-image {
+    flex: 1;
+    order: 2;
+  }
+
+  .post-item {
+    margin-bottom: 20px;
+  }
+
+  .post-item img {
+    height: 280px;
+  }
+
+  @media (max-width: 768px) {
+    .profile-details {
+      flex: 1 100%;
+      margin-right: 0;
+      margin-top: 20px;
+    }
+
+    .profile-image {
+      flex: 1 100%;
+      margin-top: 0;
+    }
+
+    .profile-details, .profile-image {
+      order: 0;
+    }
+  }

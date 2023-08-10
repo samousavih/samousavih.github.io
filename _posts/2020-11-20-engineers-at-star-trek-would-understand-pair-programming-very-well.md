@@ -2,6 +2,8 @@
 layout: post
 title:  "Engineers at Star Trek would understand Pair Programming very well"
 date:   2020-11-20 21:31:54 +1000
+thumbnail: https://cdn-images-1.medium.com/max/2000/1*vcfh2aYnjUSZP2chOoVXCQ.jpeg
+tags: [Pair Programming]
 categories: software-practices
 ---
 
@@ -17,7 +19,7 @@ According to the [Star Trek](https://www.imdb.com/title/tt0060028/) movie series
 
 ### How would you use a Star Trek computer to write code?
 
-Imagine we had a computer from the movie in front of us and we wanted to design and implement a piece of software using that. Let’s also imagine it could well understand and execute advanced software engineering concepts. For example, how to follow a specific pattern, implement a UI component, refactor, or write some unit tests. You could say “***OK computer, please write a class for this component I think [specification pattern](https://medium.com/dev-genius/simple-and-practical-specification-pattern-with-ef-core-and-c-997ddd1a0b67) would be nice here***” or ***“please write a test which covers this scenario”*** or ***“please refactor this function which is too long to a few smaller ones”***. You could see how amazing would that be. You can focus on the main and most important parts of software engineering without doing all of the details yourself. Your mind can focus on the bigger picture, software architecture, overall functionality, and test scenarios. Another way to say that is you could focus on the quality and the best ways of solving a problem without dealing with all of the details.
+Imagine we had a computer from the movie in front of us and we wanted to design and implement a piece of software using that. Let’s also imagine it could well understand and execute advanced software engineering concepts. For example, how to follow a specific pattern, implement a UI component, refactor, or write some unit tests. You could say “***OK computer, please write a class for this component I think [specification pattern]({% link _posts/2020-08-07-simple-and-practical-specification-pattern-with-ef-core-and-C.md %}) would be nice here***” or ***“please write a test which covers this scenario”*** or ***“please refactor this function which is too long to a few smaller ones”***. You could see how amazing would that be. You can focus on the main and most important parts of software engineering without doing all of the details yourself. Your mind can focus on the bigger picture, software architecture, overall functionality, and test scenarios. Another way to say that is you could focus on the quality and the best ways of solving a problem without dealing with all of the details.
 
 ### Pair programming is today’s Star Trek computer
 

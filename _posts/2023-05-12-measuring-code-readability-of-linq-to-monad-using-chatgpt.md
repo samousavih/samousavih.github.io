@@ -2,6 +2,7 @@
 layout: post
 title:  "Measuring Code Readability of Linq to Monad using ChatGPT"
 date:   2023-05-12 21:31:54 +1000
+thumbnail: https://cdn-images-1.medium.com/max/2048/1*EVCcwd1HXO1o4dgy_MqCFA.png
 categories: fop
 ---
 
@@ -11,7 +12,7 @@ Can we use ChatGPT to measure code readability?
 
 ### Background
 
-As suggested, Linq can [improve the readability of functional C# and especially railway programming](https://medium.com/itnext/improving-code-readability-in-functional-c-using-linq-to-monad-d4c73194e9b1). But one question is, can we measure it? Can we measure how much using Linq improves readability?
+As suggested, Linq can [improve the readability of functional C# and especially railway programming]({% link _posts/2023-05-18-linq-to-monad.md %}). But one question is, can we measure it? Can we measure how much using Linq improves readability?
 
 ### Can we measure code readability?
 
@@ -23,7 +24,7 @@ I have [setup SonarQube in my local machine ](https://medium.com/c-sharp-progarm
 
 ### Measuring Linq to Monads readability using SonarQube
 
-Let’s compare cognitive complexity of the two variations of create booking function, one with Linq and another with Bind operator as per the [Linq to Monad post](https://itnext.io/improving-code-readability-in-functional-c-using-linq-to-monad-d4c73194e9b1).
+Let’s compare cognitive complexity of the two variations of create booking function, one with Linq and another with Bind operator as per the [Linq to Monad post]({% link _posts/2023-05-18-linq-to-monad.md %}).
 ```c#
 public static Either<Problem, ConfirmedBooking> CreateBooking(BookingRequest bookingRequest)
 {
