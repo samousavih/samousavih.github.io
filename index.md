@@ -34,5 +34,24 @@ permalink: /
         </p>
         <a href="/articles">See more posts ...</a>
     </div>
+    <div>
+      <header class="post-header">
+        <h2 class="post-title">Talks</h2>
+      </header>  
+      <div class="post-content">
+        <p>Occasionally I speak at meetups and conferences. </p>
+        <p>
+         <div class="row">
+          <div style="margin-top: 10px;">
+            <a href="https://www.meetup.com/akl-net/events/294755381/">Linqing Railways: How to make Functional Code in C# more Readable and Flexible</a>
+            <h5>Auckland .NET User Group: July 2023</h5>
+          </div>
+          <div style="margin-top: 10px;">
+            <a href="https://www.meetup.com/brisjs/events/qswzrkywlbkb/">Scaffolding JS stacks using Yeoman, Cloud 66, Docker and push it to Cloud</a>
+            <h5>BrisJs: Aug 2017</h5>
+          </div>
+        </div>
+        </p>
+    </div>
   </div>
 </div>
