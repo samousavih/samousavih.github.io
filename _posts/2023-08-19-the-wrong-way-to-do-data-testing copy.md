@@ -1,6 +1,6 @@
 ---
 layout: post
-title:  "Data pipeline migrations are even harder : The story of a data pipeline migration with focus on testing" 
+title:  "Data Pipeline Migrations: The hardest of the hardest problems, the Saga of Super Irrational Agents" 
 date:   2023-05-23 21:31:54 +1000
 categories: data
 ---
@@ -57,7 +57,6 @@ Before continuing to describe our testing journey, I should mention that landing
 # Date partition
 The legacy data platform used to ingest the data from sources on a schedule. It would create snapshots of the sources multiple times during a month. Those snapshots were essentially partitioned based on the date they were ingested. Each snapshot was stored in a separate S3 bucket and each row did have an extra column called Date_Partition. 
 
-
 # Attempt 1: Lets lock in the new sources and run the both pipelines and compare
 The first parallel test attempt was based on date partitions. The idea was to pick the same recent date partitions for each source table and after running the both pipeline can compare the output of legacy and new pipeline. It turned out that the data sources in the new platform were updated using a different strategy. The data sources were updated on the fly. The data platform would bring any updates as it happened. Therefore, there was no need for data partitioning. The new platform was being updated more frequently. This discrepancy made it impossible to accurately test and compare the two systems because locking in the same input for the pipeline was difficult. Moreover, the new platform also gradually made some improvements on data quality e.g. removed some of the duplications in the legacy data platform and again this made the like for like comparison between the two pipelines more difficult. 
 [needs a digram]
@@ -88,20 +87,88 @@ We speculated the following were contributing to the unexpected results:
 # Lack of domain knowledge and impact on testing
 Many steps of the legacy pipeline including transformation stage was developed and maintained for a while by only one person. Those steps contained complex SQL and python code which happened to be the key part of the pipeline and at the core of migration.
 
-We also knew that the time is short, so the strategy for migration was to keep the changes to the pipeline at the ab`solute minimum and do what we have to do so we remove the dependency on the legacy data platform.
+We also knew that the time is short, so the strategy for migration was to keep the changes to the pipeline at the absolute minimum and do what we have to do to remove the dependency on the legacy data platform.
 
-With that mindset we postponed many possible improvements to the future. But understanding of how those pipeline steps work was postponed too. Therefore, most of us wouldn't be able to reason about the system. This limited the ability to test the system when first and second attempt failed to only one person in the team. This would increase the pressure on one person specially at time close to the deadline and when the stakes were high.
+With that mindset, we postponed many possible improvements to the future. But understanding of how those pipeline steps work was postponed too. Therefore, most of us wouldn't be able to reason about the system. This limited the ability to test the system to only one person in the team when first and second attempt failed. This increased the pressure on one person specially at time close to the deadline when the stakes were high.
 
 # Source tests
-As discussed before, testing sources were a priority for us. These tests were written using dbt and dbt-expectation framework. In addition to basic tests including null checks, column checks,etc., we have written some more complex tests which were testing current rows are unique. These tests were slow and costly. Initially we underestimated the costs and were running them as we developed the data pipeline on the local dev machine. This exacerbated the costs, later one we decided to run the source tests just when needed for example when we run the data pipeline in production environment. But still they were slow, so to mitigate this we decided to limit the date range. This decreased their efficiency. In one case we discovered duplicated results which was due to duplicated rows in source tables but because the anomaly was out of date range our tests didn't detect that. Also, because those tests needed to be started manually they were often ignored. 
+As discussed before, testing sources were a priority for us. These tests were written using dbt and dbt-expectation framework. In addition to basic tests including null checks, column checks,etc., we have written some more complex tests which were testing current rows are unique[more details needed]. These tests were slow and costly. Initially we underestimated the costs and were running them as we developed the data pipeline on the local dev machine. This exacerbated the costs, later one we decided to run the source tests just when needed for example when we run the data pipeline in production environment. But still they were slow, so to mitigate this we decided to limit the date range. Consequently, this decreased their efficiency. In one case we discovered duplicated results which was due to duplicated rows in source tables but because the anomaly was out of date range our tests didn't detect that. Also, because those tests needed to be started manually they were often ignored. 
 
-Despite all of the challenges with source tests, they had some benefits. They helped us identify changes in source tables as they were evolving. By just running all of the source tests we were able to highlight what was different between legacy sources and new sources while some of the discrepancies were not documented necessarily well.
+Despite all of the challenges with source tests, they had some benefits. They helped us identify changes in source tables as they were evolving. By just running all of the source tests we were able to highlight what was different between legacy sources and new sources specially while some of the discrepancies were not documented necessarily well.
+
+# Looking into the Dps maybe writing smaller tests was not a solution for us because the code didn't change much plus it would have been time consuming to write all of different tests, maybe after seeing discrepancies in number eligible orgs we should have dug in a sample number of those orgs and found out the differences in Dps for each and if there was differences figure out what was the differences in source data.
+# maybe I can do that now
+
+# How much of the risks we identified
+
+# The Domain person left
+- we knew most of the knowledge was held by one person as that person was developing the system for a while but we couldn't do anything about it because we didn't have time
+
+# The project was handled over
+ - miss communications at the time of handover
+
+# The other team disbanded
+
+# We continued to run the project as it is for a while and then all decommissioned
+
+# Biases
+
+- Ignoring base rates
+  - How much is the base rate of success for similar project
+  - Why I think the chance for us is higher of lower?
+  - Hove you done this before?
+  - Do you have skilled people?
+  - Is the knowledge shared?
+  - To what extend the company depends on this?
+  - Have look at the book about biases
+
+- Underestimation and over estimation (what was the bias)
+- When things makes sense so is true
+
 
 # Testing Grid
 We are all familiar with the famous (test pyramid)[https://martinfowler.com/articles/practical-test-pyramid.html] which gives us an idea of how we should focus our effort when it comes to testing software. When it comes to data intensive applications the similar idea is described using a (Test Grid)[https://www.thoughtworks.com/en-au/insights/blog/testing/practical-data-test-grid]. The data test grid depicts testing effort across two axises, code and data.
-Despite you can still think about testing data on it's own e.g. source data quality tests, often you are facing a mixture of data and code. Depending how broad the code scope is from a single sql query to the whole data pipeline or how specific is the data involved in test you can categorise your tests. For example a point unit test only tests a small part of the data pipeline and for just enough data and columns which covers a specific scenario and a global E2E tests would include the whole pipeline with maximum size of data most likely in an environment similar to production.
+Despite you can still think about testing data on it's own e.g. source data quality tests, often you are facing a mixture of data and code. Depending how broad the code scope is from a single sql query to the whole data pipeline or how specific is the data involved in test you can categorise your tests. 
+[explain each col and row on the grid] For example a point unit test only tests a small part of the data pipeline and for just enough data and columns which covers a specific scenario.
+Sample service tests, tests multiple steps in the pipeline together with samples of data, the data can be extracted from real data sources or synthetically prepared.
+ A global E2E tests would include the whole pipeline with maximum size of data most likely in an environment similar to production.
 
-Also, to map the test varieties for the Eligibility pipeline on Testing Grid. We can draw the diagram below[digram]. As you can see the test effort was not focussed proportionally.
+# Let's Map the testing strategy on the Grid
+To map the test varieties for the Eligibility pipeline on Testing Grid. We can draw the diagram below[diagram]. As you can see the test effort was not focussed proportionally.[Explain why you mapped them this way?]
+- Attempt 1 & Attempt 2 :Parallel testing 
+- Attempt 3: Variance testing
+- source testing
+- ?
+# How we could have written tests or what was missing and how they could help
+- How to write point unit tests? 
+  - What does this mean in the context of eligibility?
+  - How to implement in dbt and Snowflake? Link to the library.
+- How to write service sample tests 
+  - What does this mean in the context of eligibility?
+  - using CSV
+- Examples of each
+- Show diagram for each tests type and explain
+- What happens if we cross stack boundaries
+
+# How others done it?
+- How they were mapped on Data Grid?
+- What was missing? Code testing? Lets dig into that?
+- Repos to study
+   - https://github.dev.xero.com/Xero/XeroGoRevenueTransforms
+      - uses sample/point unit tests using dbt_unit_testing
+   - https://github.dev.xero.com/Xero/xade_dbt_pia
+      - sample service tests by seeds and some sample/point test using dbt_unit_testing
+   - https://github.dev.xero.com/4Xero/EIS.Standards/ 
+      - point unit tests using dbt_unit_testing
+      - global service tests using dbt singular tests
+      - Zero clone copy
+   - https://github.dev.xero.com/sbi/xsbi-pipeline-xade
+      - global tests
+      - they have multiple pipeline stages which each has a set of source tests:how this works? [Talk to someone]
+   - https://github.dev.xero.com/Xero/dt-cups-data-pipeline
+      - sample E2E using seeds/Csvs 
+   - Payments?
+   - Others across Xero? 
 
 # Reasons that we focused on global E2E tests 
 - Lack of domain knowledge
@@ -120,41 +187,6 @@ Also, to map the test varieties for the Eligibility pipeline on Testing Grid. We
 - Underestimating the time spent on running the pipeline on local? with fulls sources
 - Underestimating the costs of running the pipeline on local? with fulls sources
 
-# How we could have written tests
-- How to write point unit tests? 
-- How to write service sample tests 
-- Examples of each
-- Show diagram for each tests type and explain
-
-# Sample/Global E2E tests using Zero clone copy
-
-# But many point unit tests are a lot of effort
-- Exercise is a lot of effort,
-- Eating well is not easy, etc
-- Over estimate how your body can continue work
-
-# How others done it?
-
-- What was missing? Code testing? Lets dig into that?
-- Repos to study
-   - https://github.dev.xero.com/Xero/XeroGoRevenueTransforms
-      - uses sample/point unit tests using dbt_unit_testing
-   - https://github.dev.xero.com/Xero/xade_dbt_pia
-      - sample service tests by seeds and some sample/point test using dbt_unit_testing
-   - https://github.dev.xero.com/4Xero/EIS.Standards/ 
-      - point unit tests using dbt_unit_testing
-      - global service tests using dbt singular tests
-      - Zero clone copy
-   - https://github.dev.xero.com/sbi/xsbi-pipeline-xade
-      - global tests
-      - they have multiple pipeline stages which each has a set of source tests:how this works? [Talk to someone]
-   - https://github.dev.xero.com/Xero/dt-cups-data-pipeline
-      - sample E2E using seeds/Csvs 
-   - Payments?
-   - Others across Xero?
-# Challenges of data pipeline testing
-- They need DB which is sometimes remote
-- point unit test is different than software unit tests 
 
 # Conclusion
 - Start early
@@ -166,8 +198,21 @@ Also, to map the test varieties for the Eligibility pipeline on Testing Grid. We
 - think about observability upfront
 - Documentation
 
-
+------------------------------------------------------
 - However, for software engineers is a bit if hassle as I had to write a lot of code with SQL which certainly is not the primary language for me.
 - Writing test in sql look strange
 - which is so primitive that writing code in that language feels like early versions of static web if you know what I mean, but to Data engineers feel very sexy as they can uplift SQL using that and they are very happy about it.  
 - The trick to unblock the migration was to bring a static snapshot of each data source into the new platform so we can use them as a source. This strategy helped but over time cause the testing progress to hit a roadblock. 
+
+
+# But many point unit tests are a lot of effort
+- Exercise is a lot of effort,
+- Eating well is not easy, etc
+- Over estimate how your body can continue work
+
+
+# Challenges of data pipeline testing
+- They need DB which is sometimes remote
+- point unit test is different than software unit tests 
+
+# Sample/Global E2E tests using Zero clone copy
