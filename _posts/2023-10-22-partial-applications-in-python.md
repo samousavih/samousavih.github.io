@@ -27,7 +27,11 @@ In the above example we converted ``powern`` function with 2 arguments to ``powe
 ## easier to pass or return functions by baking in arguments and dependencies
 
 a (practical example)[https://github.com/SamsungLabs/fastflow-tensorflow/blob/8dc4caf647dc2df3c9fbe6c15bc7377baa8db1d6/tensorflow/python/ops/nn_ops.py#L2052C11-L2052C11] 
-look how tenserflow returns passes a function but bakes in some of it's argument, 
+look how tenser-flow passes a function but bakes in some of it's argument, 
+
+1) instead it had to send all of the args
+2) The ```squeeze_batch_dims``` would be the one who has to know about the args and call the passed function
+3) In way those argument setups are abstracted from ```squeeze_batch_dims```
 ```python
 
 ### the example might be hard to grasp find an easier one
@@ -57,7 +61,21 @@ return squeeze_batch_dims(
                 name=name)
 ```
 
-an example of returning a function [https://github.com/mesurendra/tensorflow/blob/a5120db4d6917f943176ef3c5bb938064604c761/tensorflow/python/ops/lookup_ops.py#L985]
+an example of returning a function [https://github.com/saleor/saleor/blob/d69bb446eff47a767903bdbe840b7db25532b3b0/saleor/product/migrations/0183_calculate_discounted_prices.py#L376]
+1) models discount with a function 
+2) two diffrent discounts created using partial
+
+### Separating action definition from execution
+In Conda [https://github.com/conda/conda/blob/e69b2353c2f14fbfc9fd3aa448ebc991b28ca136/conda/cli/main_rename.py#L127] 
+
+1) Defines actions without running them
+2) make a list 
+3) does dry run by printing the name and arguments of each action or actually running the actions
+
+Another example is bidict [https://github.com/jab/bidict/blob/7ed2ce59738a1127375ca25a2f8b2c7437514478/bidict/_base.py#L389]
+1) It has two sets(dicts) for key -> value and vice versa and always keeps them consistent 
+2) before each write it prepares the operations for write and unwrite
+3) Then runs those operations
 
 ### Overriding the default behavior of a method
 
@@ -88,6 +106,17 @@ joining dataframes
 master_join = partial(pyspark.sql.DataFrame.join, on="master", how="outer")
 all_warnings = reduce(master_join, warnings)
 ```
+# Can be used as attributes
+https://github.com/google-research/google-research/blob/70796b286879cf0fe27c66aa79c0a6413ab70a62/pvn/indicator_functions.py#L97
+
+# avoid repetition of an argument 
+https://github.com/django/django/blob/656192c2c96bb955a399d92f381e38fe2254fe17/django/db/backends/sqlite3/_functions.py#L40
+
+# creates a factory function to read from sensor
+https://github.com/home-assistant/core/blob/ab6b3d56682855e1eb7a92ba4baa6905cd1e01e5/homeassistant/components/dsmr/sensor.py#L505
+
+# used for JIT compiler? 
+https://github.com/google/evojax/blob/67c90e1ad3655097ff7b56f4975d43ff30d8e49c/evojax/obs_norm.py#L115
 
 # Performance drawbacks
 
@@ -137,8 +166,6 @@ connectToSecondDb = parial(connect,firstdb_host_url,firstdb_username,firstdb_pas
 dataBaseMigration(connectToFirstDb,connectToSecondDb)
 
 ```
-
-
 ### baking in dependencies
 
 ``doSomething(input, logger)`` the following is the code for this function.
