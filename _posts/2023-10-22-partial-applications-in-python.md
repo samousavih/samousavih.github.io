@@ -21,52 +21,30 @@ print(power2(3))   // Also prints 9
 ```
 In the above example we converted ``powern`` function with 2 arguments to ``power2`` function with only one argument. The line which did this conversion for us was ``power2 = partial(powern,n=2)``. If you look closer you will notice ``partial`` itself is a function which is called by ``powern`` as it's first argument and `2` as the second. The ``partial`` function under the hood freezes argument ``n`` with number ``2`` and gives us another function which we name it ``power2``.
 
+# How it is used in main stream function languages?
 
-# Some of interesting ways partial application is used by searching Github
+# Why
+1) How others use that?
+2) Sometimes we think a pattern is useful for something but in practice it is different
+3) Learning from most used battle tested code
+
+# Some of interesting design choices which involved partial application is used by searching Github (How it is used in Python community)
+
+1) How many repos I went through?
+2) How did I pick the samples?
+3) In some repos partial application used multiple times I only looked at one
+4) Many repos were not interesting or complicated and not suitable to talk about here 
+5) Many didn't have any interesting design using this pattern
+6) A pattern might have many different possible usages but here I wanted to see which ones are more common and practical
+7) No function chaining
 
 - Real world examples
 - Reading code
 - Source code
-  
-## Passing functions and baking in arguments and dependencies
 
-an example of returning a function [https://github.com/saleor/saleor/blob/d69bb446eff47a767903bdbe840b7db25532b3b0/saleor/discount/models.py#L133]
-1) models discount with a function 
-2) two different discounts created using partial
-   1) Fixed
-   2) Percentage
-3) 
-
-```python
- def get_discount(self, channel: Channel):
-        # .........................
-        if self.discount_value_type == DiscountValueType.FIXED:
-            discount_amount = Money(
-                voucher_channel_listing.discount_value, voucher_channel_listing.currency
-            )
-            return partial(fixed_discount, discount=discount_amount)
-        if self.discount_value_type == DiscountValueType.PERCENTAGE:
-            return partial(
-                percentage_discount,
-                percentage=voucher_channel_listing.discount_value,
-                rounding=ROUND_HALF_UP,
-            )
-```
-```python
-def get_discount_amount_for(self, price: Money, channel: Channel):
-        discount = self.get_discount(channel)
-        after_discount = discount(price)
-        if after_discount.amount < 0:
-            return price
-        return price - after_discount
-
-```
-
-
-### Separating action definition from execution
+### Separating action/computation definition from execution 
 In Conda [https://github.com/conda/conda/blob/e69b2353c2f14fbfc9fd3aa448ebc991b28ca136/conda/cli/main_rename.py#L127]
  
-
 1) it is [Conda rename](https://docs.conda.io/projects/conda/en/latest/commands/rename.html) which renames an environment
 2) Defines actions without running them
    1) clone current environment
@@ -104,33 +82,17 @@ def execute(args: Namespace, parser: ArgumentParser) -> int:
                 print(f"{DRY_RUN_PREFIX} {func.func.__name__} {','.join(func.args)}")
             else:
                 func()
-
-    if args.force:
-        with rename_context(destination, dry_run=args.dry_run):
-            clone_and_remove()
-    else:
-        clone_and_remove()
-    return 0
+#..........................
 ```
 
 Another example is bidict [https://github.com/jab/bidict/blob/7ed2ce59738a1127375ca25a2f8b2c7437514478/bidict/_base.py#L389]
 1) It has two sets(dicts) for key -> value and vice versa and always keeps them consistent 
-2) before each write it prepares the operations for write and unwrite
+2) before each write it prepares the operations for write and unwrite to rollback
 3) Then runs those operations
+4) Can be extended by other types of bidict as Ordered Bidict
 
 ```python
  def _prep_write(self, newkey: KT, newval: VT, oldkey: OKT[KT], oldval: OVT[VT], save_unwrite: bool) -> PreparedWrite:
-        """Given (newkey, newval) to insert, return the list of operations necessary to perform the write.
-
-        *oldkey* and *oldval* are as returned by :meth:`_dedup`.
-
-        If *save_unwrite* is true, also return the list of inverse operations necessary to undo the write.
-        This design allows :meth:`_update` to roll back a partially applied update that fails part-way through
-        when necessary. This design also allows subclasses that require additional operations to complete
-        a write to easily extend this implementation. For example, :class:`bidict.OrderedBidictBase` calls this
-        inherited implementation, and then extends the list of ops returned with additional operations
-        needed to keep its internal linked list nodes consistent with its items' order as changes are made.
-        """
         fwdm, invm = self._fwdm, self._invm
         fwdm_set, invm_set = fwdm.__setitem__, invm.__setitem__
         fwdm_del, invm_del = fwdm.__delitem__, invm.__delitem__
@@ -179,6 +141,177 @@ Another example is bidict [https://github.com/jab/bidict/blob/7ed2ce59738a112737
                 ]
         return write, unwrite
 ```
+
+
+pre-configuring multiple options 
+https://github.com/pypa/pip/blob/main/src/pip/_internal/cli/cmdoptions.py
+
+in ``pip insatll -h`` -h is an option
+1) each option is a class
+2) But the class is not instantiated when all of common options are being defined,why?
+3) Why it uses partial and other time it just defines a function
+4) Options can be used and shared among command and might be processed multiple times  and some might hold state, to insure isolation between commands they won't be instantiated globally
+
+"""
+shared options and groups
+
+The principle here is to define options once, but *not* instantiate them
+globally. One reason being that options with action='append' can carry state
+between parses. pip parses general options twice internally, and shouldn't
+pass on state. To be consistent, all options will follow this design.
+"""
+
+```python
+#........................................
+help_: Callable[..., Option] = partial(
+    Option,
+    "-h",
+    "--help",
+    dest="help",
+    action="help",
+    help="Show help.",
+)
+
+debug_mode: Callable[..., Option] = partial(
+    Option,
+    "--debug",
+    dest="debug_mode",
+    action="store_true",
+    default=False,
+    help=(
+        "Let unhandled exceptions propagate outside the main subroutine, "
+        "instead of logging them to stderr."
+    ),
+)
+#........................................
+```
+
+Another good example in pytorch 
+https://github.com/pytorch/pytorch/blob/e66ec5843f6cc203de5570059794a3ae14dab4ae/torch/profiler/_utils.py#L24
+creating two bfs and dfs using a traverse function
+
+```python
+
+traverse_dfs = functools.partial(_traverse, next_fn=lambda x: x.pop(), reverse=True)
+traverse_bfs = functools.partial(
+    _traverse, next_fn=lambda x: x.popleft(), reverse=False
+)
+
+```
+
+```python
+
+def _traverse(tree, next_fn, children_fn=lambda x: x.children, reverse: bool = False):
+    order = reversed if reverse else lambda x: x
+    remaining = deque(order(tree))
+    while remaining:
+        curr_event = next_fn(remaining)
+        yield curr_event
+        for child_event in order(children_fn(curr_event)):
+            remaining.append(child_event)
+```
+  
+## Some sort of factory
+
+# Factory for discount calculations in retail applications 
+()[https://github.com/saleor/saleor/blob/d69bb446eff47a767903bdbe840b7db25532b3b0/saleor/discount/models.py#L133]
+1) creates a discount function
+2) models discount with a function 
+3) two different discounts created using partial
+   1) Fixed
+   2) Percentage
+4) 
+
+```python
+ def get_discount(self, channel: Channel):
+        # .........................
+        if self.discount_value_type == DiscountValueType.FIXED:
+            discount_amount = Money(
+                voucher_channel_listing.discount_value, voucher_channel_listing.currency
+            )
+            return partial(fixed_discount, discount=discount_amount)
+        if self.discount_value_type == DiscountValueType.PERCENTAGE:
+            return partial(
+                percentage_discount,
+                percentage=voucher_channel_listing.discount_value,
+                rounding=ROUND_HALF_UP,
+            )
+```
+```python
+def get_discount_amount_for(self, price: Money, channel: Channel):
+        discount = self.get_discount(channel)
+        after_discount = discount(price)
+        if after_discount.amount < 0:
+            return price
+        return price - after_discount
+
+```
+
+# creates a factory function to read from sensor
+
+1) IOT, home assistant, real time usage 
+2) Creates multiple versions of factory to read from DSMR sensors for meters 
+```python
+protocol = entry.data.get(CONF_PROTOCOL, DSMR_PROTOCOL)
+    if CONF_HOST in entry.data:
+        if protocol == DSMR_PROTOCOL:
+            create_reader = create_tcp_dsmr_reader
+        else:
+            create_reader = create_rfxtrx_tcp_dsmr_reader
+        reader_factory = partial(
+            create_reader,
+            entry.data[CONF_HOST],
+            entry.data[CONF_PORT],
+            dsmr_version,
+            update_entities_telegram,
+            loop=hass.loop,
+            keep_alive_interval=60,
+        )
+    else:
+        if protocol == DSMR_PROTOCOL:
+            create_reader = create_dsmr_reader
+        else:
+            create_reader = create_rfxtrx_dsmr_reader
+        reader_factory = partial(
+            create_reader,
+            entry.data[CONF_PORT],
+            dsmr_version,
+            update_entities_telegram,
+            loop=hass.loop,
+        )
+
+    async def connect_and_reconnect() -> None:
+        """Connect to DSMR and keep reconnecting until Home Assistant stops."""
+        stop_listener = None
+        transport = None
+        protocol = None
+
+        while hass.state == CoreState.not_running or hass.is_running:
+            # Start DSMR asyncio.Protocol reader
+
+            # Reflect connected state in devices state by setting an
+            # empty telegram resulting in `unknown` states
+            update_entities_telegram({})
+
+            try:
+                transport, protocol = await hass.loop.create_task(reader_factory())
+
+                if transport:
+                    # Register listener to close transport on HA shutdown
+                    @callback
+                    def close_transport(_event: Event) -> None:
+                        """Close the transport on HA shutdown."""
+                        if not transport:  # noqa: B023
+                            return
+                        transport.close()  # noqa: B023
+
+                    stop_listener = hass.bus.async_listen_once(
+                        EVENT_HOMEASSISTANT_STOP, close_transport
+                    )
+
+```
+
+
 
 
 ### Overriding the default behavior of a method
@@ -254,38 +387,62 @@ https://github.com/pandas-dev/pandas/blob/2d2d67db48413fde356bce5c8d376d5b9dd5d0
 ``exec_insert`` can be assigned to a different functon depending on the argument of insert in the case of argument ``method`` has a value it would be set by the function passed as this argument. and the ``exec_insert`` would be called to perform the insert operation.
 It could have been only ``exec_insert = method`` instead of ``exec_insert = partial(method, self)``?##Should Ask Someone##
 
-### Better readability by pre-configurations 
-pre-configuring multiple options 
-https://github.com/pypa/pip/blob/main/src/pip/_internal/cli/cmdoptions.py
+# Can be used for function decorators
 
-predefined commands/operations
-
-https://github.dev.xero.com/Xero/dt-slim-contacts/blob/d1443de0d445759b0ba9753eaadf5b4229cacb09/src/tasks/data/make.py
-
-Another good example in pytorch 
-https://github.com/pytorch/pytorch/blob/e66ec5843f6cc203de5570059794a3ae14dab4ae/torch/profiler/_utils.py#L24
-creating two bfs and dfs using a traverse function
-
-
-### Fitting functions 
-https://datascience.stackexchange.com/questions/11356/merging-multiple-data-frames-row-wise-in-pyspark
-joining dataframes 
-
-```Python
-master_join = partial(pyspark.sql.DataFrame.join, on="master", how="outer")
-all_warnings = reduce(master_join, warnings)
-```
-# Can be used as attributes
+1) using jax just-in-time compilation  (https://jax.readthedocs.io/en/latest/_autosummary/jax.jit.html#jax.jit) common in computations which should be speed up like in deep learning
+2) jit can be used as a function decorator
+3) If we want to pass in arguments a common way is to use partial application
+4) ``static_argnames`` is to say when to recompile
 https://github.com/google-research/google-research/blob/70796b286879cf0fe27c66aa79c0a6413ab70a62/pvn/indicator_functions.py#L97
+```python
+@functools.partial(
+    jax.jit, static_argnames=('mersenne_prime_exponent', 'num_bins')
+)
+def multiply_shift_hash_function(
+    x,
+    params,
+    *,
+    mersenne_prime_exponent,
+    num_bins,
+):  # pyformat: disable
+  """Multiply shift hash function."""
+ #...............................
+```
+
+https://github.com/google/evojax/blob/67c90e1ad3655097ff7b56f4975d43ff30d8e49c/evojax/obs_norm.py#L115
 
 # avoid repetition of an argument 
+
+1) Avoiding repetition when many funcion calls needed
+2) Here is django it uses partial application to create many deterministic Sqllite functions
 https://github.com/django/django/blob/656192c2c96bb955a399d92f381e38fe2254fe17/django/db/backends/sqlite3/_functions.py#L40
+```python
+def register(connection):
+    create_deterministic_function = functools.partial(
+        connection.create_function,
+        deterministic=True,
+    )
+    create_deterministic_function("django_date_extract", 2, _sqlite_datetime_extract)
+    create_deterministic_function("django_date_trunc", 4, _sqlite_date_trunc)
+    create_deterministic_function(
+        "django_datetime_cast_date", 3, _sqlite_datetime_cast_date
+    )
+    create_deterministic_function(
+        "django_datetime_cast_time", 3, _sqlite_datetime_cast_time
+    )
+    create_deterministic_function(
+        "django_datetime_extract", 4, _sqlite_datetime_extract
+    )
+    create_deterministic_function("django_datetime_trunc", 4, _sqlite_datetime_trunc)
+    create_deterministic_function("django_time_extract", 2, _sqlite_time_extract)
+#.........................
+```
 
-# creates a factory function to read from sensor
-https://github.com/home-assistant/core/blob/ab6b3d56682855e1eb7a92ba4baa6905cd1e01e5/homeassistant/components/dsmr/sensor.py#L505
 
-# used in EvoJAX for JIT compiler? 
-https://github.com/google/evojax/blob/67c90e1ad3655097ff7b56f4975d43ff30d8e49c/evojax/obs_norm.py#L115
+# Link to the repo used to find samples
+
+
+# -----------------------------------
 
 # Performance drawbacks
 
@@ -293,11 +450,6 @@ https://github.com/google/evojax/blob/67c90e1ad3655097ff7b56f4975d43ff30d8e49c/e
 
 # Other ways which might give you the same result
 
-
-# Link to the repo used to find samples
-
-
-# -----------------------------------
 
 ```python
 def dataBaseMigration(firstdb_username,firstdb_pass,firstdb_host_url ,seconddb_username,secondb_pass,secondb_host_url):
@@ -357,4 +509,13 @@ And you can guess if we call ``doSomethingWithLogger`` and provide it's only arg
 ```Python
 doSomething(1,logger)
 doSomethingWithLogger(1)
+```
+
+### Fitting functions 
+https://datascience.stackexchange.com/questions/11356/merging-multiple-data-frames-row-wise-in-pyspark
+joining dataframes 
+
+```Python
+master_join = partial(pyspark.sql.DataFrame.join, on="master", how="outer")
+all_warnings = reduce(master_join, warnings)
 ```
