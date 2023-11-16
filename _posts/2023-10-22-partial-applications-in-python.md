@@ -1,6 +1,6 @@
 ---
 layout: post
-title:  "functional Python: Partial Application"
+title:  "Partial Application in Python: A look under the hood of popular python repositories on GitHub"
 date:   2023-10-12 21:31:54 +1000
 thumbnail: https://cdn-images-1.medium.com/max/2048/1*wmihy9TV2z6x238jY4C6Hw.png
 tags: [functional programming, Python]
@@ -8,7 +8,9 @@ categories: fop
 ---
 
 # What is Partial Application?
-Partial application or partial function application is a very powerful technique in [functional programming](https://en.wikipedia.org/wiki/Functional_programming). Using partial application we can fix some or all of arguments of a function with any values and as result we get another function with less or no arguments. A classic example of this is making ``power2`` function which calculates only ``x^2`` from a function called ``powern`` which calculates ``x^n``.
+Partial application or partial function application is a very powerful technique in [functional programming](https://en.wikipedia.org/wiki/Functional_programming). Using partial application we can fix some or all of arguments of a function with any values and as result we get another function with less or no arguments.
+In functional first languages, partial application enables function composition and piping. [Haskell](https://wiki.haskell.org/Partial_application) or [F#](https://fsharpforfunandprofit.com/posts/partial-application/) are well-known examples.
+In Python partial application is supported by the language in [``functools``](https://docs.python.org/3/library/functools.html#functools.partial) library. A classic example of this is making ``power2`` function which calculates only ``x^2`` from a function called ``powern`` which calculates ``x^n``.
 
 ```python
 def powern(x,n):
@@ -20,27 +22,24 @@ print(power2(3))   // Also prints 9
 
 ```
 In the above example we converted ``powern`` function with 2 arguments to ``power2`` function with only one argument. The line which did this conversion for us was ``power2 = partial(powern,n=2)``. If you look closer you will notice ``partial`` itself is a function which is called by ``powern`` as it's first argument and `2` as the second. The ``partial`` function under the hood freezes argument ``n`` with number ``2`` and gives us another function which we name it ``power2``.
+If it was F# we could we could compose `power2` with other functions and create new functions. The following is to calculate sum of squares of first n natural numbers using ``power2`` function in F#.
 
-# How it is used in main stream function languages?
+```f#
+let sumOfSquares n =
+    seq {1 .. n}
+    |> Seq.map power2
+    |> Seq.sum
+```
+But is it the same for Python? How Python ecosystem usually apply this technique? 
 
 # Why
 1) How others use that?
 2) Sometimes we think a pattern is useful for something but in practice it is different
 3) Learning from most used battle tested code
 
-# Some of interesting design choices which involved partial application is used by searching Github (How it is used in Python community)
-
-1) How many repos I went through?
-2) How did I pick the samples?
-3) In some repos partial application used multiple times I only looked at one
-4) Many repos were not interesting or complicated and not suitable to talk about here 
-5) Many didn't have any interesting design using this pattern
-6) A pattern might have many different possible usages but here I wanted to see which ones are more common and practical
-7) No function chaining
-
-- Real world examples
-- Reading code
-- Source code
+# Searching most popular Python repositories on Github
+For this article I did a search on 100+ python repositories on Github which had more than 100 number of stars and at least used ``partial`` keyword once over the whole repository. Here is the [source code]() used for this article.
+Then I short listed well-known repositories e.g. pip,Panda,etc. In some repositories partial application was used multiple times but I only picked one use case. Additionally, in many repos the usage of the technique was not very interesting or it was complicated and not suitable to be discussed here. I also, prioritised the samples which partial application was pivotal for the core problem that the repository was solving.
 
 ### Separating action/computation definition from execution 
 In Conda [https://github.com/conda/conda/blob/e69b2353c2f14fbfc9fd3aa448ebc991b28ca136/conda/cli/main_rename.py#L127]
