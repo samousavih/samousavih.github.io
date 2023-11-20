@@ -39,18 +39,28 @@ But is it the same for Python? How Python ecosystem usually apply this technique
 
 # Searching most popular Python repositories on Github
 For this article I did a search on 100+ python repositories on Github which had more than 100 number of stars and at least used ``partial`` keyword once over the whole repository. Here is the [source code]() used for this article.
-Then I short listed well-known repositories e.g. pip,Panda,etc. In some repositories partial application was used multiple times but I only picked one use case. Additionally, in many repos the usage of the technique was not very interesting or it was complicated and not suitable to be discussed here. I also, prioritised the samples which partial application was pivotal for the core problem that the repository was solving.
+Then I short listed well-known repositories e.g. pip, Panda, Conda, etc. In some repositories partial application was used multiple times but I only picked one use case. Additionally, in many repos the usage of the technique was not very interesting or it was complicated and not suitable to be discussed here. I also, prioritised the samples which partial application was pivotal for the core problem that the repository was solving.
 
-### Separating action/computation definition from execution 
-In Conda [https://github.com/conda/conda/blob/e69b2353c2f14fbfc9fd3aa448ebc991b28ca136/conda/cli/main_rename.py#L127]
- 
-1) it is [Conda rename](https://docs.conda.io/projects/conda/en/latest/commands/rename.html) which renames an environment
-2) Defines actions without running them
-   1) clone current environment
-   2) remove current environment 
-3) make a list 
-4) does dry run by printing the name and arguments of each action or actually running the actions
+## Dry run of Conda commands
+[Conda](https://github.com/conda/conda/tree/main) is a popular package manager. With Conda you can create multiple independent python environments and switch between them when needed. There is also a dry run option which you can use to see how each of Conda's commands would impact the current environment setup. The interesting command we studying here is ``Conda rename``. [This command](https://docs.conda.io/projects/conda/en/latest/commands/rename.html) would change the name of an environment. See below a sample usage of this command,
+```sh
+$ Conda rename -n oldname newname
+```
+The command also has a few options, one of them is dry run ``-d``, which prints a preview of what would the command do without actually applying the changes. Let see an example,
+```sh
+$ conda rename -n oldname newname -d
 
+Dry run action: clone /usr/local/Caskroom/miniconda/base/envs/oldname,/usr/local/Caskroom/miniconda/base/envs/newname
+Dry run action: rm_rf /usr/local/Caskroom/miniconda/base/envs/oldname
+
+```
+As you see above dry run shows two actions:
+
+1) Cloning the current environment to a new path with the new name
+2) Removing current environment 
+
+Now let's have a look at Conda's source code to find out how it is implemented. Rename command is implemented [here](https://github.com/conda/conda/blob/e69b2353c2f14fbfc9fd3aa448ebc991b28ca136/conda/cli/main_rename.py#L127).
+The following is a code extract from ```main_rename.py```.
 ```python
 def execute(args: Namespace, parser: ArgumentParser) -> int:
     """Executes the command for renaming an existing environment."""
@@ -83,13 +93,23 @@ def execute(args: Namespace, parser: ArgumentParser) -> int:
                 func()
 #..........................
 ```
+In the code above the function ```clone_and_remove``` creates a tuple of the actions wich should happen as part of the rename command. You can see two ```partial``` function calls to create two functions for first cloning the environment and second removing the old one. ```clone``` and ```rm_rf``` are the two functions which execute the actual actions. The next lines are where the magic happens. The code checks for ```args.dry_run``` and only prints the function names and their arguments otherwise calls each function.
 
-Another example is bidict [https://github.com/jab/bidict/blob/7ed2ce59738a1127375ca25a2f8b2c7437514478/bidict/_base.py#L389]
-1) It has two sets(dicts) for key -> value and vice versa and always keeps them consistent 
-2) before each write it prepares the operations for write and unwrite to rollback
-3) Then runs those operations
-4) Can be extended by other types of bidict as Ordered Bidict
+## Consistent bidirectional mapping in bidict
+[Bidict](https://github.com/jab/bidict/) is a Python library designed for bidirectional mapping between keys and values. 
+With bidicts, two sets (dicts) are employed to manage relationships in both directions: from keys to values and vice versa. This bidirectional capability is invaluable in scenarios where maintaining consistency between the two sets is crucial.
+An intriguing feature of Bidict is its ability to handle update failures gracefully, following a [fails clean](https://bidict.readthedocs.io/en/main/basic-usage.html#updates-fail-clean) approach. In the event of an error during an update operation, Bidict automatically rolls back the changes, preventing partial updates and maintaining a consistent state. This robust behavior enhances data integrity and ensures that the bidict remains in a valid state, even in the face of failures.
+The following is an example of how the library would gracefully handle a key duplication.
 
+```python
+b = bidict({1: 'one', 2: 'two'})
+b.putall([(3, 'three'), (1, 'uno')])
+
+# (1, 'uno') was the problem...
+b  # ...but (3, 'three') was not added either:
+bidict({1: 'one', 2: 'two'})
+```
+Now lets look under the hood of the library. ```_perp_write``` is the [function]([https://github.com/jab/bidict/blob/7ed2ce59738a1127375ca25a2f8b2c7437514478/bidict/_base.py#L389]) which prepare the operations needed for write operation upfront.
 ```python
  def _prep_write(self, newkey: KT, newval: VT, oldkey: OKT[KT], oldval: OVT[VT], save_unwrite: bool) -> PreparedWrite:
         fwdm, invm = self._fwdm, self._invm
@@ -140,28 +160,20 @@ Another example is bidict [https://github.com/jab/bidict/blob/7ed2ce59738a112737
                 ]
         return write, unwrite
 ```
+Before each write operation, Bidict prepares operations for both writing and unwriting, see ```write``` and ```unwrite``` lists in the code above.
+These operations serve as a set of instructions to update both sets of the bidict. In case of a failure during the update, Bidict seamlessly rolls back these operations, preventing any partial or inconsistent changes by running all of operations in ```unwrite``` list.
+All of the operations in those two lists are pre-setup using partial application. The functions which do the actual writing are ```fwdm_set``` for updating the forward dictionary and ```invm_set``` for updating the inverse one.
 
-
-pre-configuring multiple options 
-https://github.com/pypa/pip/blob/main/src/pip/_internal/cli/cmdoptions.py
-
-in ``pip insatll -h`` -h is an option
-1) each option is a class
-2) But the class is not instantiated when all of common options are being defined,why?
-3) Why it uses partial and other time it just defines a function
-4) Options can be used and shared among command and might be processed multiple times  and some might hold state, to insure isolation between commands they won't be instantiated globally
-
-"""
-shared options and groups
-
-The principle here is to define options once, but *not* instantiate them
-globally. One reason being that options with action='append' can carry state
-between parses. pip parses general options twice internally, and shouldn't
-pass on state. To be consistent, all options will follow this design.
-"""
+## Pre-configuration of options for pip
+[Pip](https://pip.pypa.io/en/stable/) is a widely-used package installer for Python, facilitating the management of Python packages. Users commonly interact with Pip to install, upgrade, or uninstall packages in their Python environments.
+When using the command `pip install -h`, the `-h` option is utilized to display the help information for the `pip install` command. In the context of Pip, each option is represented as a class, providing a structured and modular approach to command-line options.
+Pip initializes its options through the definition of classes, as evident in its source code [here](https://github.com/pypa/pip/blob/2a0acb595c4b6394f1f3a4e7ef034ac2e3e8c17e/src/pip/_internal/cli/cmdoptions.py#L121). These options are parsed and processed during various commands.
+It's important to note that while the classes define options, they are not instantiated globally when common options are being defined. Instead, options can be used and shared among commands, allowing for flexibility and code reuse. However, to ensure isolation between commands, options are not instantiated globally.
+Here is an example code extract from Pip's source code illustrating the definition of two options - `help_` and `debug_mode`:
 
 ```python
-#........................................
+#................................
+
 help_: Callable[..., Option] = partial(
     Option,
     "-h",
@@ -182,159 +194,31 @@ debug_mode: Callable[..., Option] = partial(
         "instead of logging them to stderr."
     ),
 )
-#........................................
+
+#................................
 ```
 
-Another good example in pytorch 
-https://github.com/pytorch/pytorch/blob/e66ec5843f6cc203de5570059794a3ae14dab4ae/torch/profiler/_utils.py#L24
-creating two bfs and dfs using a traverse function
+Notice how partial application helps with defining these options and freezing the parameters.
+
+## Overriding default sql insert in Panda Dataframes
+[Pandas](https://pandas.pydata.org/) is a widely-used data manipulation library in Python, offering powerful data structures like DataFrames. DataFrames provide a tabular structure for working with data, offering flexibility and ease of use. One of the notable functionalities in Pandas is the `to_sql` method, allowing users to insert DataFrame data into a SQL database.
+
+The `to_sql` method can be found in the Pandas documentation [here](https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.to_sql.html). An example use case involves inserting a DataFrame into a table, with the ability to handle conflicts by ignoring the insert, as demonstrated in the following code:
 
 ```python
-
-traverse_dfs = functools.partial(_traverse, next_fn=lambda x: x.pop(), reverse=True)
-traverse_bfs = functools.partial(
-    _traverse, next_fn=lambda x: x.popleft(), reverse=False
-)
-
-```
-
-```python
-
-def _traverse(tree, next_fn, children_fn=lambda x: x.children, reverse: bool = False):
-    order = reversed if reverse else lambda x: x
-    remaining = deque(order(tree))
-    while remaining:
-        curr_event = next_fn(remaining)
-        yield curr_event
-        for child_event in order(children_fn(curr_event)):
-            remaining.append(child_event)
-```
-  
-## Some sort of factory
-
-# Factory for discount calculations in retail applications 
-()[https://github.com/saleor/saleor/blob/d69bb446eff47a767903bdbe840b7db25532b3b0/saleor/discount/models.py#L133]
-1) creates a discount function
-2) models discount with a function 
-3) two different discounts created using partial
-   1) Fixed
-   2) Percentage
-4) 
-
-```python
- def get_discount(self, channel: Channel):
-        # .........................
-        if self.discount_value_type == DiscountValueType.FIXED:
-            discount_amount = Money(
-                voucher_channel_listing.discount_value, voucher_channel_listing.currency
-            )
-            return partial(fixed_discount, discount=discount_amount)
-        if self.discount_value_type == DiscountValueType.PERCENTAGE:
-            return partial(
-                percentage_discount,
-                percentage=voucher_channel_listing.discount_value,
-                rounding=ROUND_HALF_UP,
-            )
-```
-```python
-def get_discount_amount_for(self, price: Money, channel: Channel):
-        discount = self.get_discount(channel)
-        after_discount = discount(price)
-        if after_discount.amount < 0:
-            return price
-        return price - after_discount
-
-```
-
-# creates a factory function to read from sensor
-
-1) IOT, home assistant, real time usage 
-2) Creates multiple versions of factory to read from DSMR sensors for meters 
-```python
-protocol = entry.data.get(CONF_PROTOCOL, DSMR_PROTOCOL)
-    if CONF_HOST in entry.data:
-        if protocol == DSMR_PROTOCOL:
-            create_reader = create_tcp_dsmr_reader
-        else:
-            create_reader = create_rfxtrx_tcp_dsmr_reader
-        reader_factory = partial(
-            create_reader,
-            entry.data[CONF_HOST],
-            entry.data[CONF_PORT],
-            dsmr_version,
-            update_entities_telegram,
-            loop=hass.loop,
-            keep_alive_interval=60,
-        )
-    else:
-        if protocol == DSMR_PROTOCOL:
-            create_reader = create_dsmr_reader
-        else:
-            create_reader = create_rfxtrx_dsmr_reader
-        reader_factory = partial(
-            create_reader,
-            entry.data[CONF_PORT],
-            dsmr_version,
-            update_entities_telegram,
-            loop=hass.loop,
-        )
-
-    async def connect_and_reconnect() -> None:
-        """Connect to DSMR and keep reconnecting until Home Assistant stops."""
-        stop_listener = None
-        transport = None
-        protocol = None
-
-        while hass.state == CoreState.not_running or hass.is_running:
-            # Start DSMR asyncio.Protocol reader
-
-            # Reflect connected state in devices state by setting an
-            # empty telegram resulting in `unknown` states
-            update_entities_telegram({})
-
-            try:
-                transport, protocol = await hass.loop.create_task(reader_factory())
-
-                if transport:
-                    # Register listener to close transport on HA shutdown
-                    @callback
-                    def close_transport(_event: Event) -> None:
-                        """Close the transport on HA shutdown."""
-                        if not transport:  # noqa: B023
-                            return
-                        transport.close()  # noqa: B023
-
-                    stop_listener = hass.bus.async_listen_once(
-                        EVENT_HOMEASSISTANT_STOP, close_transport
-                    )
-
-```
-
-
-
-
-### Overriding the default behavior of a method
-
-Dataframe has a `to_sql` (https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.to_sql.html)
-
-the following code does inserts a Dataframe into a table but in the case of a conflict ignores the insert, the method argument overwrites the default behavior of insert
-
-```python
-from sqlalchemy.dialects.postgresql import insert
 def insert_on_conflict_nothing(table, conn, keys, data_iter):
     # "a" is the primary key in "conflict_table"
     data = [dict(zip(keys, row)) for row in data_iter]
     stmt = insert(table.table).values(data).on_conflict_do_nothing(index_elements=["a"])
     result = conn.execute(stmt)
     return result.rowcount
-df_conflict.to_sql(name="conflict_table", con=conn, if_exists="append", method=insert_on_conflict_nothing)  
+
+df_conflict.to_sql(name="conflict_table", con=conn, if_exists="append", method=insert_on_conflict_nothing)
 ```
 
-example here 
-https://github.com/pandas-dev/pandas/blob/2d2d67db48413fde356bce5c8d376d5b9dd5d0c2/pandas/io/sql.py#L1037
+In this example, the ```insert_on_conflict_nothing``` function is passed as the method argument, allowing users to customize the behavior when conflicts occur during the insert.
 
- we can override the way insert happens by passing a function
-
+The implementation of the to_sql method is provided [here](https://github.com/pandas-dev/pandas/blob/2d2d67db48413fde356bce5c8d376d5b9dd5d0c2/pandas/io/sql.py#L1037). Users can override the way the insert operation happens by passing a custom function to the method parameter.
  ```python
  def insert(
         self,
@@ -382,9 +266,7 @@ https://github.com/pandas-dev/pandas/blob/2d2d67db48413fde356bce5c8d376d5b9dd5d0
                         total_inserted += num_inserted
         return total_inserted
  ```
-
-``exec_insert`` can be assigned to a different functon depending on the argument of insert in the case of argument ``method`` has a value it would be set by the function passed as this argument. and the ``exec_insert`` would be called to perform the insert operation.
-It could have been only ``exec_insert = method`` instead of ``exec_insert = partial(method, self)``?##Should Ask Someone##
+The ```exec_insert``` function plays a crucial role in performing the insert operation and can be assigned to a different function depending on the method argument. If the method has a value, it is set by the function passed as this argument. Partial application is used to make the insert function passed as an argument appear like a method on the same class, providing access to "self".
 
 # Can be used for function decorators
 
@@ -518,3 +400,129 @@ joining dataframes
 master_join = partial(pyspark.sql.DataFrame.join, on="master", how="outer")
 all_warnings = reduce(master_join, warnings)
 ```
+
+Another good example in pytorch 
+https://github.com/pytorch/pytorch/blob/e66ec5843f6cc203de5570059794a3ae14dab4ae/torch/profiler/_utils.py#L24
+creating two bfs and dfs using a traverse function
+
+```python
+
+traverse_dfs = functools.partial(_traverse, next_fn=lambda x: x.pop(), reverse=True)
+traverse_bfs = functools.partial(
+    _traverse, next_fn=lambda x: x.popleft(), reverse=False
+)
+
+```
+
+```python
+
+def _traverse(tree, next_fn, children_fn=lambda x: x.children, reverse: bool = False):
+    order = reversed if reverse else lambda x: x
+    remaining = deque(order(tree))
+    while remaining:
+        curr_event = next_fn(remaining)
+        yield curr_event
+        for child_event in order(children_fn(curr_event)):
+            remaining.append(child_event)
+```
+
+## Some sort of factory
+
+# Factory for discount calculations in retail applications 
+()[https://github.com/saleor/saleor/blob/d69bb446eff47a767903bdbe840b7db25532b3b0/saleor/discount/models.py#L133]
+1) creates a discount function
+2) models discount with a function 
+3) two different discounts created using partial
+   1) Fixed
+   2) Percentage
+4) 
+
+```python
+ def get_discount(self, channel: Channel):
+        # .........................
+        if self.discount_value_type == DiscountValueType.FIXED:
+            discount_amount = Money(
+                voucher_channel_listing.discount_value, voucher_channel_listing.currency
+            )
+            return partial(fixed_discount, discount=discount_amount)
+        if self.discount_value_type == DiscountValueType.PERCENTAGE:
+            return partial(
+                percentage_discount,
+                percentage=voucher_channel_listing.discount_value,
+                rounding=ROUND_HALF_UP,
+            )
+```
+```python
+def get_discount_amount_for(self, price: Money, channel: Channel):
+        discount = self.get_discount(channel)
+        after_discount = discount(price)
+        if after_discount.amount < 0:
+            return price
+        return price - after_discount
+
+```
+
+# creates a factory function to read from sensor
+
+1) IOT, home assistant, real time usage 
+2) Creates multiple versions of factory to read from DSMR sensors for meters 
+```python
+protocol = entry.data.get(CONF_PROTOCOL, DSMR_PROTOCOL)
+    if CONF_HOST in entry.data:
+        if protocol == DSMR_PROTOCOL:
+            create_reader = create_tcp_dsmr_reader
+        else:
+            create_reader = create_rfxtrx_tcp_dsmr_reader
+        reader_factory = partial(
+            create_reader,
+            entry.data[CONF_HOST],
+            entry.data[CONF_PORT],
+            dsmr_version,
+            update_entities_telegram,
+            loop=hass.loop,
+            keep_alive_interval=60,
+        )
+    else:
+        if protocol == DSMR_PROTOCOL:
+            create_reader = create_dsmr_reader
+        else:
+            create_reader = create_rfxtrx_dsmr_reader
+        reader_factory = partial(
+            create_reader,
+            entry.data[CONF_PORT],
+            dsmr_version,
+            update_entities_telegram,
+            loop=hass.loop,
+        )
+
+    async def connect_and_reconnect() -> None:
+        """Connect to DSMR and keep reconnecting until Home Assistant stops."""
+        stop_listener = None
+        transport = None
+        protocol = None
+
+        while hass.state == CoreState.not_running or hass.is_running:
+            # Start DSMR asyncio.Protocol reader
+
+            # Reflect connected state in devices state by setting an
+            # empty telegram resulting in `unknown` states
+            update_entities_telegram({})
+
+            try:
+                transport, protocol = await hass.loop.create_task(reader_factory())
+
+                if transport:
+                    # Register listener to close transport on HA shutdown
+                    @callback
+                    def close_transport(_event: Event) -> None:
+                        """Close the transport on HA shutdown."""
+                        if not transport:  # noqa: B023
+                            return
+                        transport.close()  # noqa: B023
+
+                    stop_listener = hass.bus.async_listen_once(
+                        EVENT_HOMEASSISTANT_STOP, close_transport
+                    )
+
+```
+
