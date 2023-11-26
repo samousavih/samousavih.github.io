@@ -270,11 +270,16 @@ The ```exec_insert``` function plays a crucial role in performing the insert ope
 
 # Can be used for function decorators
 
-1) using jax just-in-time compilation  (https://jax.readthedocs.io/en/latest/_autosummary/jax.jit.html#jax.jit) common in computations which should be speed up like in deep learning
-2) jit can be used as a function decorator
-3) If we want to pass in arguments a common way is to use partial application
-4) ``static_argnames`` is to say when to recompile
-https://github.com/google-research/google-research/blob/70796b286879cf0fe27c66aa79c0a6413ab70a62/pvn/indicator_functions.py#L97
+[JAX](https://jax.readthedocs.io/) is a library commonly used for just-in-time (JIT) compilation in computations, particularly in performance-critical applications like deep learning. The `jax.jit` function is a key feature for optimizing computations by compiling and optimizing functions on-the-fly.
+
+The [official documentation for `jax.jit`](https://jax.readthedocs.io/en/latest/_autosummary/jax.jit.html#jax.jit) provides comprehensive information on how to utilize JIT compilation effectively.
+
+JIT can be seamlessly applied as a function decorator, making it convenient to speed up specific computations. A common practice is to use partial application when passing arguments to the JIT-compiled function. This flexibility allows users to customize the behavior of the compiled function by supplying specific arguments.
+
+The `static_argnames` parameter in JIT is crucial for controlling when to recompile a function. By specifying which arguments are considered static, users can manage the trade-off between compilation overhead and performance gains. An example of using `static_argnames` can be found in the source code [here](https://github.com/google-research/google-research/blob/70796b286879cf0fe27c66aa79c0a6413ab70a62/pvn/indicator_functions.py#L97).
+
+Here is an example of how JIT is used as a function decorator with partial application for a math computation function:
+
 ```python
 @functools.partial(
     jax.jit, static_argnames=('mersenne_prime_exponent', 'num_bins')
@@ -289,117 +294,158 @@ def multiply_shift_hash_function(
   """Multiply shift hash function."""
  #...............................
 ```
+In this example, the ``multiply_shift_hash_function`` is decorated with ``jax.jit`` using partial application, specifying the ``static_argnames`` as arguments for more efficient compilation and execution.
 
-https://github.com/google/evojax/blob/67c90e1ad3655097ff7b56f4975d43ff30d8e49c/evojax/obs_norm.py#L115
-
-# avoid repetition of an argument 
-
-1) Avoiding repetition when many funcion calls needed
-2) Here is django it uses partial application to create many deterministic Sqllite functions
-https://github.com/django/django/blob/656192c2c96bb955a399d92f381e38fe2254fe17/django/db/backends/sqlite3/_functions.py#L40
-```python
-def register(connection):
-    create_deterministic_function = functools.partial(
-        connection.create_function,
-        deterministic=True,
-    )
-    create_deterministic_function("django_date_extract", 2, _sqlite_datetime_extract)
-    create_deterministic_function("django_date_trunc", 4, _sqlite_date_trunc)
-    create_deterministic_function(
-        "django_datetime_cast_date", 3, _sqlite_datetime_cast_date
-    )
-    create_deterministic_function(
-        "django_datetime_cast_time", 3, _sqlite_datetime_cast_time
-    )
-    create_deterministic_function(
-        "django_datetime_extract", 4, _sqlite_datetime_extract
-    )
-    create_deterministic_function("django_datetime_trunc", 4, _sqlite_datetime_trunc)
-    create_deterministic_function("django_time_extract", 2, _sqlite_time_extract)
-#.........................
-```
-
-
-# Link to the repo used to find samples
-
-
-# -----------------------------------
+# Other findings which wasn't mentioned here
+1) Ternsorflow
+2) pytorch,https://github.com/pytorch/pytorch/blob/e66ec5843f6cc203de5570059794a3ae14dab4ae/torch/profiler/_utils.py#L24
+3) saleor,[https://github.com/saleor/saleor/blob/d69bb446eff47a767903bdbe840b7db25532b3b0/saleor/discount/models.py#L133] 
+4) Home IOT
 
 # Performance drawbacks
+1) It is slower
+```python
+import timeit
+
+setting = """
+import functools
+
+def f(a,b,c):
+    pass
+
+g = functools.partial(f, 4)
+h = functools.partial(f, 4, 5)
+i = functools.partial(f, 4, 5, 3)
+"""
+
+print(timeit.timeit('f(4, 5, 3)', setup = setting, number=100000)*1000)
+print(timeit.timeit('g(5, 3)',    setup = setting, number=100000)*1000)
+print(timeit.timeit('h(3)',       setup = setting, number=100000)*1000)
+print(timeit.timeit('i()',        setup = setting, number=100000)*1000)
+```
+```
+6.880872999317944
+9.710253012599424
+10.193951980909333
+9.41502299974672
+```
+2) here to show why is slower using this benchmark
+3) Why it is slower?
+4) Is there any usage when you prefer no to use it?
+5) Why the result is different when using pypy? why calling h is quicker than other partially applied functions?
+
+```
+1.1300640180706978
+15.009083988843486
+4.196833004243672
+13.206779985921457
+```
 
 # How they work under the hood
+1) How it works?
+2) How you can't call it with more args than it freezes
+3) is it different in CPython and other Python implementations?
+4) what is Modules/_functoolsmodule.c vs Lib/functools.py which one is the implementation? 
+   ```python
+   class partial:
+    """New function with partial application of the given arguments
+    and keywords.
+    """
+
+    __slots__ = "func", "args", "keywords", "__dict__", "__weakref__"
+
+    def __new__(cls, func, /, *args, **keywords):
+        if not callable(func):
+            raise TypeError("the first argument must be callable")
+
+        if hasattr(func, "func"):
+            args = func.args + args
+            keywords = {**func.keywords, **keywords}
+            func = func.func
+
+        self = super(partial, cls).__new__(cls)
+
+        self.func = func
+        self.args = args
+        self.keywords = keywords
+        return self
+
+    def __call__(self, /, *args, **keywords):
+        keywords = {**self.keywords, **keywords}
+        return self.func(*self.args, *args, **keywords)
+
+    @recursive_repr()
+    def __repr__(self):
+        qualname = type(self).__qualname__
+        args = [repr(self.func)]
+        args.extend(repr(x) for x in self.args)
+        args.extend(f"{k}={v!r}" for (k, v) in self.keywords.items())
+        if type(self).__module__ == "functools":
+            return f"functools.{qualname}({', '.join(args)})"
+        return f"{qualname}({', '.join(args)})"
+
+    def __reduce__(self):
+        return type(self), (self.func,), (self.func, self.args,
+               self.keywords or None, self.__dict__ or None)
+
+    def __setstate__(self, state):
+        if not isinstance(state, tuple):
+            raise TypeError("argument to __setstate__ must be a tuple")
+        if len(state) != 4:
+            raise TypeError(f"expected 4 items in state, got {len(state)}")
+        func, args, kwds, namespace = state
+        if (not callable(func) or not isinstance(args, tuple) or
+           (kwds is not None and not isinstance(kwds, dict)) or
+           (namespace is not None and not isinstance(namespace, dict))):
+            raise TypeError("invalid partial state")
+
+        args = tuple(args) # just in case it's a subclass
+        if kwds is None:
+            kwds = {}
+        elif type(kwds) is not dict: # XXX does it need to be *exactly* dict?
+            kwds = dict(kwds)
+        if namespace is None:
+            namespace = {}
+
+        self.__dict__ = namespace
+        self.func = func
+        self.args = args
+        self.keywords = kwds
+   ```
 
 # Other ways which might give you the same result
-
-
+1) Using local functions
+2) using lambdas
+3) What is the difference? 
+4) You can use copy functions [https://stackoverflow.com/questions/17388438/python-functools-partial-efficiency#:~:text=The%20code%20with%20partial%20takes,speed%20of%20a%20builtin%20function]
+5) Why would someone want to deep copy a function
 ```python
-def dataBaseMigration(firstdb_username,firstdb_pass,firstdb_host_url ,seconddb_username,secondb_pass,secondb_host_url):
-    firstConnection = connect(firstdb_host_url,firstdb_username,firstdb_pass)
-    secondConnection = connect(seconddb_host_url,seconddb_username,seconddb_pass)
-    data = firstConnection.read()
-    data1 = convert(data)
-    secondConnection.werite(data1)
+import timeit
+import types
 
 
-def main():
-#firstdb_username,
-#firstdb_pass,firstdb_host_url ,seconddb_username,secondb_pass,secondb_host_url
-dataBaseMigration(adasdas)
+# http://stackoverflow.com/questions/6527633/how-can-i-make-a-deepcopy-of-a-function-in-python
+def copy_func(f, name=None):
+    return types.FunctionType(f.func_code, f.func_globals, name or f.func_name,
+        f.func_defaults, f.func_closure)
 
+
+def f(a, b, c):
+    return a + b + c
+
+
+i = copy_func(f, 'i')
+i.func_defaults = (4, 5, 3)
+
+
+print timeit.timeit('f(4,5,3)', setup = 'from __main__ import f', number=100000)
+print timeit.timeit('i()', setup = 'from __main__ import i', number=100000)
 ```
 
-```python
-def dataBaseMigration(connectToFirstDb,connectToSecondDb):
-    firstConnection = connectToFirstDb()
-    secondConnection = connectToSecondDb()
-    data = firstConnection.read()
-    data1 = convert(data)
-    secondConnection.werite(data1)
 
 
-def main():
-#firstdb_username,
-#firstdb_pass,firstdb_host_url ,seconddb_username,secondb_pass,secondb_host_url
-connectToFirstDb = parial(connect,firstdb_host_url,firstdb_username,firstdb_pass)
-connectToSecondDb = parial(connect,firstdb_host_url,firstdb_username,firstdb_pass)
-dataBaseMigration(connectToFirstDb,connectToSecondDb)
 
-```
-### baking in dependencies
-
-``doSomething(input, logger)`` the following is the code for this function.
-
-```python
-def doSomething(input, logger):
-    ActuallyDoTheThings(input)
-    logger("the thing is done")
-```
-The above function after it's core operation also logs a message so we can track it worked. Logging happens using another function called ``logger`` which we are passing as an argument. Let's have a look at the logger function,
-
-```python
-def logger(message):
-    print(message)
-```
-Now we can fix the logger argument in ``doSomething(input, logger)`` then we have a function called ``doSomethingWithLogger(input)``. Imagine we do this
-
-```python
-doSomethingWithLogger = partial(doSomething, logger:logger)
-```
-And you can guess if we call ``doSomethingWithLogger`` and provide it's only argument it would be the same as calling ``doSomething`` and provide both input and logger arguments.
-
-```Python
-doSomething(1,logger)
-doSomethingWithLogger(1)
-```
-
-### Fitting functions 
-https://datascience.stackexchange.com/questions/11356/merging-multiple-data-frames-row-wise-in-pyspark
-joining dataframes 
-
-```Python
-master_join = partial(pyspark.sql.DataFrame.join, on="master", how="outer")
-all_warnings = reduce(master_join, warnings)
-```
+### ----------------------------------------------------
 
 Another good example in pytorch 
 https://github.com/pytorch/pytorch/blob/e66ec5843f6cc203de5570059794a3ae14dab4ae/torch/profiler/_utils.py#L24
@@ -525,4 +571,3 @@ protocol = entry.data.get(CONF_PROTOCOL, DSMR_PROTOCOL)
                     )
 
 ```
-
