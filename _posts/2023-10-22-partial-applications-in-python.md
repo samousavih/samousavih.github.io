@@ -8,8 +8,8 @@ categories: fop
 ---
 
 # Abstract
-Python community applies partial application across many popular code repositories. Among them are Panda, Conda, pip. 
-Partial application has been utilised to shape exciting and ingenious designs. Python is not a functional first language and uses partial application differently to what is common in functional first languages, e.g. Haskel or F#.
+Python community applies partial application across many popular code repositories. Among them are Panda, Conda and pip. 
+Partial application has been utilised to shape exciting and ingenious designs. Python is not a functional first language and usage of partial application is different to what is common in functional first languages, e.g. Haskel or F#.
 
 # What is Partial Application?
 Partial application or partial function application is a powerful technique in [functional programming](https://en.wikipedia.org/wiki/Functional_programming). Using partial application we can fix some or all of arguments of a function with any values and as result we get another function with less or no arguments.
@@ -26,7 +26,7 @@ print(power2(3))   // Also prints 9
 
 ```
 In the above example we transformed ``powern`` function with 2 arguments to ``power2`` function with only one argument. The line which did this conversion was ``power2 = partial(powern,n=2)``. If you look closer you will notice ``partial`` itself is a function which is called by ``powern`` as it's first argument and `2` as the second. The ``partial`` function under the hood freezes argument ``n`` with number ``2`` and gives us another function which we name it ``power2``.
-If it was F# we could we could compose `power2` with other functions and create new functions. The following is to calculate sum of squares of first n natural numbers using ``power2`` function in F#.
+If it was F# we could compose `power2` with other functions and create a new function. The following is to calculate sum of squares of first n natural numbers using ``power2`` in F#.
 
 ```f#
 let sumOfSquares n =
@@ -37,7 +37,7 @@ let sumOfSquares n =
 But is it the same for Python? How Python ecosystem usually applies this technique? to find out lets explore Github and study some real world examples of using partial application. 
 
 # Searching most popular Python repositories on Github
-For this article I did a search on 100+ python repositories on Github which had more than 100 stars and at least used ``partial`` keyword once over the whole repository. Here is the [source code]() used for this article.
+For this article I did a search on 100+ python repositories on Github which had more than 100 stars and at least used ``partial`` keyword once over the whole repository. Here is the [source code](https://github.com/samousavih/github-search/blob/main/README.md) used for this article.
 I have short-listed well-known repositories e.g. pip, Panda, Conda, etc. In some repositories partial application was used multiple times but I only picked one use case. Additionally, in many repos the usage of the technique was not very interesting or it was complicated and not suitable to be discussed here. I also, prioritised the samples which partial application was pivotal for the core problem that the repository was solving.
 
 ## Dry run of Conda commands
@@ -93,7 +93,7 @@ def execute(args: Namespace, parser: ArgumentParser) -> int:
 ```
 In the code above the function ```clone_and_remove``` creates a tuple of the actions wich should happen as part of the rename command. You can see two ```partial``` function calls to create two functions for first cloning the environment and second removing the old one. ```clone``` and ```rm_rf``` are the two functions which execute the actual actions. The next lines are where the magic happens. The code checks for ```args.dry_run``` and only prints the function names and their arguments otherwise calls each function.
 
-## Consistent bidirectional mapping in bidict
+## Resilient bidirectional mapping in bidict
 [bidict](https://github.com/jab/bidict/) is a Python library designed for bidirectional mapping between keys and values. 
 With bidict, two sets (dicts) are employed to manage relationships in both directions: from keys to values and vice versa. This bidirectional capability is handy in scenarios where maintaining consistency between the two sets is crucial.
 bidict can handle update failures gracefully, following a [fails clean](https://bidict.readthedocs.io/en/main/basic-usage.html#updates-fail-clean) approach. In the event of an error during an update operation, bidict automatically rolls back the changes, preventing partial updates and maintaining a consistent state.
@@ -200,86 +200,15 @@ debug_mode: Callable[..., Option] = partial(
 
 Notice how partial application helps with defining these options and freezing the parameters without needing to instantiate the options.
 
-## Overriding default sql insert in Panda Dataframes
-[Pandas](https://pandas.pydata.org/) is a widely-used data manipulation library in Python, offering powerful data structures like DataFrames. DataFrames provide a tabular structure for working with data, offering flexibility and ease of use. One of the functionalities in Pandas is the `to_sql` method, allowing users to insert DataFrame data into a SQL database.
-
-`to_sql` method can be found in the Pandas documentation [here](https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.to_sql.html). The default insert logic can be extended for example if it is required to handle conflicts by ignoring the insert you can do the following,
-
-```python
-from sqlalchemy.dialects.postgresql import insert
-def insert_on_conflict_nothing(table, conn, keys, data_iter):
-    # "a" is the primary key in "conflict_table"
-    data = [dict(zip(keys, row)) for row in data_iter]
-    stmt = insert(table.table).values(data).on_conflict_do_nothing(index_elements=["a"])
-    result = conn.execute(stmt)
-    return result.rowcount
-
-df_conflict.to_sql(name="conflict_table", con=conn, if_exists="append", method=insert_on_conflict_nothing)
-```
-
-In this example, the ```insert_on_conflict_nothing``` function is passed as the method argument, allowing users to customize the behavior when conflicts occur during the insert.
-
-The implementation of the to_sql method is provided [here](https://github.com/pandas-dev/pandas/blob/2d2d67db48413fde356bce5c8d376d5b9dd5d0c2/pandas/io/sql.py#L1037). Users can override the way the insert operation happens by passing a custom function to the method parameter.
- ```python
- def insert(
-        self,
-        chunksize: int | None = None,
-        method: Literal["multi"] | Callable | None = None,
-    ) -> int | None:
-        # set insert method
-        if method is None:
-            exec_insert = self._execute_insert
-        elif method == "multi":
-            exec_insert = self._execute_insert_multi
-        elif callable(method):
-            exec_insert = partial(method, self)
-        else:
-            raise ValueError(f"Invalid parameter `method`: {method}")
-
-        keys, data_list = self.insert_data()
-
-        nrows = len(self.frame)
-
-        if nrows == 0:
-            return 0
-
-        if chunksize is None:
-            chunksize = nrows
-        elif chunksize == 0:
-            raise ValueError("chunksize argument should be non-zero")
-
-        chunks = (nrows // chunksize) + 1
-        total_inserted = None
-        with self.pd_sql.run_transaction() as conn:
-            for i in range(chunks):
-                start_i = i * chunksize
-                end_i = min((i + 1) * chunksize, nrows)
-                if start_i >= end_i:
-                    break
-
-                chunk_iter = zip(*(arr[start_i:end_i] for arr in data_list))
-                num_inserted = exec_insert(conn, keys, chunk_iter)
-                # GH 46891
-                if num_inserted is not None:
-                    if total_inserted is None:
-                        total_inserted = num_inserted
-                    else:
-                        total_inserted += num_inserted
-        return total_inserted
- ```
-The ```exec_insert``` function plays a crucial role in performing the insert operation and can be assigned to a different function depending on the method argument. If the method has a value, it is set by the function passed as this argument. Partial application is used to make the insert function passed as an argument appear like a method on the same class, providing access to "self".
-
 # Can be used for function decorators
 
-[JAX](https://jax.readthedocs.io/) is a library commonly used for just-in-time (JIT) compilation in computations, particularly in performance-critical applications like deep learning. The `jax.jit` function is a key feature for optimizing computations by compiling and optimizing functions on-the-fly.
+[JAX](https://jax.readthedocs.io/) is a library commonly used for just-in-time (JIT) compilation in computations, particularly in performance-critical applications like deep learning. The `jax.jit` function is used for optimising functions on-the-fly.
 
-The [official documentation for `jax.jit`](https://jax.readthedocs.io/en/latest/_autosummary/jax.jit.html#jax.jit) provides comprehensive information on how to utilize JIT compilation effectively.
+The [official documentation for `jax.jit`](https://jax.readthedocs.io/en/latest/_autosummary/jax.jit.html#jax.jit) provides information on how to utilize JIT compilation.
 
-JIT can be seamlessly applied as a function decorator, making it convenient to speed up specific computations. A common practice is to use partial application when passing arguments to the JIT-compiled function. This flexibility allows users to customize the behavior of the compiled function by supplying specific arguments.
+JIT can be applied as a function decorator. A common practice is to use partial application when passing arguments to the JIT-compiled function. This allows users to customise the behavior by supplying specific arguments.
 
-The `static_argnames` parameter in JIT is crucial for controlling when to recompile a function. By specifying which arguments are considered static, users can manage the trade-off between compilation overhead and performance gains. An example of using `static_argnames` can be found in the source code [here](https://github.com/google-research/google-research/blob/70796b286879cf0fe27c66aa79c0a6413ab70a62/pvn/indicator_functions.py#L97).
-
-Here is an example of how JIT is used as a function decorator with partial application for a math computation function:
+The `static_argnames` parameter in JIT helps with controlling when to recompile a function. By specifying which arguments are considered static, users can manage the trade-off between compilation overhead and performance gains. An example of using jit can be found in the source code [google-research repository](https://github.com/google-research/google-research/blob/70796b286879cf0fe27c66aa79c0a6413ab70a62/pvn/indicator_functions.py#L97).
 
 ```python
 @functools.partial(
@@ -295,7 +224,43 @@ def multiply_shift_hash_function(
   """Multiply shift hash function."""
  #...............................
 ```
-In this example, the ``multiply_shift_hash_function`` is decorated with ``jax.jit`` using partial application, specifying the ``static_argnames`` as arguments for more efficient compilation and execution.
+In this example, the ``multiply_shift_hash_function`` is decorated with ``jax.jit`` using partial application.  ``static_argnames`` is set with ```('mersenne_prime_exponent', 'num_bins')``` which means each time the value of those arguments changes jit would need to recompile the function.
+
+For fun here is a benchmark to show how jit improves computation time. In this example we calculating cube of elements in a matrix. This benchmark was done on a Mac with intel cpu.
+```python
+import time
+from jax import jit
+import jax.numpy as jnp
+
+def cube(x):
+    return x * x * x
+
+# generate data
+x = jnp.ones((100000, 100000))
+
+# create the jit version of the cube function
+jit_cube = jit(cube)
+
+# Measure the time taken by cube without jit
+start_time = time.time()
+cube(x)
+end_time = time.time()
+time_taken_function1 = end_time - start_time
+print(f"Time taken by cube: {time_taken_function1} seconds")
+
+# Measure the time taken by cube with jit
+start_time = time.time()
+jit_cube(x)
+end_time = time.time()
+time_taken_function2 = end_time - start_time
+print(f"Time taken by jit_cube: {time_taken_function2} seconds")
+```
+
+
+```
+Time taken by cube: 112.80942106246948 seconds
+Time taken by jit_cube: 39.94196319580078 seconds
+```
 
 # Other findings which wasn't mentioned here
 1) Ternsorflow
