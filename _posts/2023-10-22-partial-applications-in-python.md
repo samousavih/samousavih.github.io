@@ -8,13 +8,17 @@ categories: fop
 ---
 
 # Abstract
-Python community applies partial application across many popular code repositories. Among them are Panda, Conda and pip. 
-Partial application has been utilised to shape exciting and ingenious designs. Python is not a functional first language and usage of partial application is different to what is common in functional first languages, e.g. Haskel or F#.
+Python community applies partial function application across many popular code repositories. Among them are Panda, Conda and pip 
+which this functional technique helps with exciting designs. Considering Python is not a functional first language, the usage of partial application, is different to what is common in functional first languages, e.g. Haskel or F#.
 
-# What is Partial Application?
-Partial application or partial function application is a powerful technique in [functional programming](https://en.wikipedia.org/wiki/Functional_programming). Using partial application we can fix some or all of arguments of a function with any values and as result we get another function with less or no arguments.
+# Motivation
+I have recently needed to write a utility application in Python which dumps data from multiple http services into a database. In the code I applied a famous functional pattern called partial function application in a certain way. I have learned the pattern by studying [F#](https://fsharpforfunandprofit.com/posts/partial-application/) and knew one or two things about it's application. So decided to utilise my learnings and apply that to the code specially because Python already has an out the box library for functional programming including partial application called [``functools``](https://docs.python.org/3/library/functools.html#functools.partial). Afterwards, this thought came to me that how others would do this? Would someone with more experience in Python do what I did? How partial application is used across python community and in well-known, most used repositories in Github? So I decided to explore Github and find use cases of the technique and learn from it.
+
+# What is Partial Function Application?
+Partial application or partial function application is a powerful technique in [functional programming](https://en.wikipedia.org/wiki/Functional_programming). Using partial application we can fix some or all of arguments of a function with values and as result have another function with less or no arguments.
 In functional first languages, partial application enables function composition and piping. [Haskell](https://wiki.haskell.org/Partial_application) or [F#](https://fsharpforfunandprofit.com/posts/partial-application/) are well-known examples.
-In Python, partial application is supported by the language in [``functools``](https://docs.python.org/3/library/functools.html#functools.partial) library. A classic example of this is making ``power2`` function which calculates only ``x^2`` from a function called ``powern`` which calculates ``x^n``.
+In Python, partial application is supported by out of the box [``functools``](https://docs.python.org/3/library/functools.html#functools.partial) library.
+A classic example of this is making ``power2`` function from ``powern`` function, buy fixing ``n`` with 2.
 
 ```python
 def powern(x,n):
@@ -25,7 +29,7 @@ print(powern(3,2)) // Prints 9
 print(power2(3))   // Also prints 9
 
 ```
-In the above example we transformed ``powern`` function with 2 arguments to ``power2`` function with only one argument. The line which did this conversion was ``power2 = partial(powern,n=2)``. If you look closer you will notice ``partial`` itself is a function which is called by ``powern`` as it's first argument and `2` as the second. The ``partial`` function under the hood freezes argument ``n`` with number ``2`` and gives us another function which we name it ``power2``.
+In the above example we transformed ``powern`` function with 2 arguments to ``power2`` function with only one argument. The trasformation happnes by ``power2 = partial(powern,n=2)``. If you look closer you will notice ``partial`` itself is a function which is called by ``powern`` as it's first argument and `2` as the second. The ``partial`` function under the hood freezes argument ``n`` with number ``2`` and gives us another function which we name it ``power2``.
 If it was F# we could compose `power2` with other functions and create a new function. The following is to calculate sum of squares of first n natural numbers using ``power2`` in F#.
 
 ```f#
@@ -34,13 +38,64 @@ let sumOfSquares n =
     |> Seq.map power2
     |> Seq.sum
 ```
-But is it the same for Python? How Python ecosystem usually applies this technique? to find out lets explore Github and study some real world examples of using partial application. 
+Another variation of this example is to freeze dependencies. Imagine ``powern`` function had another argument to log for observability, ``powern(x,n,logger)``.
+
+```python
+def powern(x,n,logger):
+    logger("calculating {x}^{n}")
+    return x**n
+
+power2_with_logger = partial(powern,n=2,logger=console_logger)
+
+print(power2_with_logger(3)) // calculating 3^2 9
+
+```
+And again if it was F# we could easily compose with other functions, as ```power2_with_logger``` has now only one argument.
+```f#
+let sumOfSquares n =
+    seq {1 .. n}
+    |> Seq.map power2_with_logger
+    |> Seq.sum
+```
+
+Of course I am not suggesting that functions defined in python can be used in F# but only wanted to show the common usages of partial function application in functional languages without needing to know about their syntax much.
+
+
+# How I used Partial Function Application
+The code I wrote which lead to this article was roughly similar to the following code extract. I say roughly because it had extra considerations for scalability, residence, throttling, etc, which I remove to only highlight the usage of partial application. I haven't either displayed the implementation of some of the functions for simplicity but you can imagine how they look like.
+
+```python
+
+def dump_data_from_service(write_to_db,read_from_service, data_ids_to_read):
+    for data_id in data_ids_read:
+       data =  read_from_service(data_id)
+       data_with_useful_formt = map_to_useful_format(data)
+       write_to_db(data_with_useful_formt)
+
+def write_to_db(get_db_connection, data):
+    connection = get_db_connection()
+    connection.write(data)
+
+def read_from_services(read_from_service1, read_from_service2, read_from_service3, data_id):
+    data_part_1 = read_from_service1(data_id)
+    data_part_2 = read_from_service2(data_id)
+    data_part_3 = read_from_service3(data_id)
+    return combine_all_parts(data_part_1,data_part_2,data_part_2,data_part_3)
+
+def main():
+    data_ids_to_read = [.....]
+    write_to_sql_db = partial(write_to_db,get_sql_connection)
+    read_from_services = partial(read_from_services,read_from_serviceA,read_from_serviceB,reas_from_serviceB)
+    dump_data_from_service(write_to_sql_db,read_from_services,data_ids_to_read)
+
+```
+Notice the usage of partial application in the ```main()``` function. I am basically putting together multiple functions by partially apply them with their dependencies. It is similar to what we know as [dependency injection](https://en.wikipedia.org/wiki/Dependency_injection) but with only functions. I mainly did this so I can easily write tests by mocking dependencies
 
 # Searching most popular Python repositories on Github
-For this article I did a search on 100+ python repositories on Github which had more than 100 stars and at least used ``partial`` keyword once over the whole repository. Here is the [source code](https://github.com/samousavih/github-search/blob/main/README.md) used for this article.
+For this article I did a search on 100+ Python repositories on Github which had more than 100 stars and at least used ``partial`` keyword once over the whole repository. Here is the [source code](https://github.com/samousavih/github-search/blob/main/README.md) used for this article.
 I have short-listed well-known repositories e.g. pip, Panda, Conda, etc. In some repositories partial application was used multiple times but I only picked one use case. Additionally, in many repos the usage of the technique was not very interesting or it was complicated and not suitable to be discussed here. I also, prioritised the samples which partial application was pivotal for the core problem that the repository was solving.
 
-## Dry run of Conda commands
+# Dry run of Conda commands
 [Conda](https://github.com/conda/conda/tree/main) is a popular package manager. With Conda you can create multiple independent python environments and switch between them when needed. There is also a dry run option which you can use to see how each of Conda's commands would impact the current environment setup. The interesting command we study here is ``Conda rename``. [This command](https://docs.conda.io/projects/conda/en/latest/commands/rename.html) would change the name of an environment. See below a sample usage of this command,
 ```sh
 $ Conda rename -n oldname newname
@@ -93,7 +148,7 @@ def execute(args: Namespace, parser: ArgumentParser) -> int:
 ```
 In the code above the function ```clone_and_remove``` creates a tuple of the actions wich should happen as part of the rename command. You can see two ```partial``` function calls to create two functions for first cloning the environment and second removing the old one. ```clone``` and ```rm_rf``` are the two functions which execute the actual actions. The next lines are where the magic happens. The code checks for ```args.dry_run``` and only prints the function names and their arguments otherwise calls each function.
 
-## Resilient bidirectional mapping in bidict
+# Resilient bidirectional mapping in bidict
 [bidict](https://github.com/jab/bidict/) is a Python library designed for bidirectional mapping between keys and values. 
 With bidict, two sets (dicts) are employed to manage relationships in both directions: from keys to values and vice versa. This bidirectional capability is handy in scenarios where maintaining consistency between the two sets is crucial.
 bidict can handle update failures gracefully, following a [fails clean](https://bidict.readthedocs.io/en/main/basic-usage.html#updates-fail-clean) approach. In the event of an error during an update operation, bidict automatically rolls back the changes, preventing partial updates and maintaining a consistent state.
@@ -165,7 +220,7 @@ These operations serve as a set of instructions to update both ```self._fwdm``` 
 All of the operations in those two lists are pre-setup using partial application. The functions which do the actual writing are ```fwdm_set``` for updating the forward dictionary and ```invm_set``` for updating the inverse one. 
 As observed, partial application plays an important role in this design and makes it easier to create the both lists of write and unwrite operations.
 
-## Pre-configuration of options for pip
+# Pre-configuration of options for pip
 [Pip](https://pip.pypa.io/en/stable/) is another widely-used package installer (manager) for Python. Pip has many commands and each has several options. As an example  `-h` option is utilised to display the help information for the `pip install` command. Each option is represented as a class in Pip, providing a structured and modular approach to command-line options.
 Pip initialises its options through the definition of classes, which can be seen in [cmdoptions.py](https://github.com/pypa/pip/blob/2a0acb595c4b6394f1f3a4e7ef034ac2e3e8c17e/src/pip/_internal/cli/cmdoptions.py#L121). These options are parsed and processed during various commands.
 Options are defined globally so can be used and shared among commands, allowing for flexibility and code reuse. However, to ensure isolation between commands, options are not instantiated globally.
@@ -200,7 +255,7 @@ debug_mode: Callable[..., Option] = partial(
 
 Notice how partial application helps with defining these options and freezing the parameters without needing to instantiate the options.
 
-# Can be used for function decorators
+# JIT function decorator
 
 [JAX](https://jax.readthedocs.io/) is a library commonly used for just-in-time (JIT) compilation in computations, particularly in performance-critical applications like deep learning. The `jax.jit` function is used for optimising functions on-the-fly.
 
@@ -224,9 +279,9 @@ def multiply_shift_hash_function(
   """Multiply shift hash function."""
  #...............................
 ```
-In this example, the ``multiply_shift_hash_function`` is decorated with ``jax.jit`` using partial application.  ``static_argnames`` is set with ```('mersenne_prime_exponent', 'num_bins')``` which means each time the value of those arguments changes jit would need to recompile the function.
+In this example, the ``multiply_shift_hash_function`` is decorated with ``jax.jit`` using partial application.  ``static_argnames`` is set with ```('mersenne_prime_exponent', 'num_bins')``` which means each time the value of those arguments changes JIT would need to recompile the function.
 
-For fun here is a benchmark to show how jit improves computation time. In this example we calculating cube of elements in a matrix. This benchmark was done on a Mac with intel cpu.
+For fun here is a benchmark to show how JIT improves computation time. In this example we calculating cube of elements in a matrix. This benchmark was done on a Mac with Intel CPU.
 ```python
 import time
 from jax import jit
@@ -256,15 +311,17 @@ time_taken_function2 = end_time - start_time
 print(f"Time taken by jit_cube: {time_taken_function2} seconds")
 ```
 
-
 ```
 Time taken by cube: 112.80942106246948 seconds
 Time taken by jit_cube: 39.94196319580078 seconds
 ```
 
 # Other findings which wasn't mentioned here
-1) Ternsorflow
-2) pytorch,https://github.com/pytorch/pytorch/blob/e66ec5843f6cc203de5570059794a3ae14dab4ae/torch/profiler/_utils.py#L24
-3) saleor,[https://github.com/saleor/saleor/blob/d69bb446eff47a767903bdbe840b7db25532b3b0/saleor/discount/models.py#L133] 
-4) Home IOT
+The above examples were only a few among many others. Other interesting cases I found were [Tensorflow](https://github.com/tensorflow/tensorflow/tree/master), [pytorch](https://github.com/pytorch/pytorch/blob/e66ec5843f6cc203de5570059794a3ae14dab4ae/torch/profiler/_utils.py#L24), [saleor](https://github.com/saleor/saleor/blob/d69bb446eff47a767903bdbe840b7db25532b3b0/saleor/discount/models.py#L133), and  [Home Assist ](https://github.com/home-assistant/core/blob/a8148cea65454b79b44ab1c7da15d9b57d39f805/homeassistant/components/dsmr/sensor.py#L589), but avoided adding them here as the article would be too long. Feel free to explore them yourself.
 
+# Conclusion
+1) counldn't find any dependency injection
+2) Mostly was creating operations to use later
+3) joy of learning new 
+4) Double check our understanding with reality
+5) Not easy to search using Apis
