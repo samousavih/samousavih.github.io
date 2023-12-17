@@ -1,23 +1,23 @@
 ---
 layout: post
-title:  "Partial Application in Python: A look under the hood of popular python repositories on GitHub"
+title:  "Partial Application in python: A look under the hood of popular python repositories on GitHub"
 date:   2023-10-12 21:31:54 +1000
 thumbnail: https://cdn-images-1.medium.com/max/2048/1*wmihy9TV2z6x238jY4C6Hw.png
-tags: [functional programming, Python]
+tags: [functional programming, python]
 categories: fop
 ---
 
 # Abstract
 Python community applies partial function application across many popular code repositories. Among them are Panda, Conda and pip 
-which this functional technique helps with exciting designs. Considering Python is not a functional first language, the usage of partial application, is different to what is common in functional first languages, e.g. Haskel or F#.
+which the technique helps with exciting designs.However, considering python is not a functional first language, the usage of partial application, is different to what is common in functional first languages, e.g. Haskel or F#.
 
 # Motivation
-I have recently needed to write a utility application in Python which dumps data from multiple http services into a database. In the code I applied a famous functional pattern called partial function application in a certain way. I have learned the pattern by studying [F#](https://fsharpforfunandprofit.com/posts/partial-application/) and knew one or two things about it's application. So decided to utilise my learnings and apply that to the code specially because Python already has an out the box library for functional programming including partial application called [``functools``](https://docs.python.org/3/library/functools.html#functools.partial). Afterwards, this thought came to me that how others would do this? Would someone with more experience in Python do what I did? How partial application is used across python community and in well-known, most used repositories in Github? So I decided to explore Github and find use cases of the technique and learn from it.
+I have recently needed to write a utility application in python which dumps data from multiple Http services into a database. In the code I applied a famous functional pattern called partial function application in a certain way. I have learned the pattern by studying [F#](https://fsharpforfunandprofit.com/posts/partial-application/) and knew one or two things about it's application. So decided to utilise my learnings and apply that to the code, specially because python already has an out the box library for functional programming which includes partial application. The library is called [``functools``](https://docs.python.org/3/library/functools.html#functools.partial). Afterwards, this thought came to me that how others would do this? Would someone with more experience in python do what I did? How partial application is used across python community and in well-known repositories in Github? So I decided to explore Github and find use cases of the technique.
 
 # What is Partial Function Application?
-Partial application or partial function application is a powerful technique in [functional programming](https://en.wikipedia.org/wiki/Functional_programming). Using partial application we can fix some or all of arguments of a function with values and as result have another function with less or no arguments.
+Partial function application or for short partial application is a powerful technique in [functional programming](https://en.wikipedia.org/wiki/Functional_programming). Using partial application we can fix some or all of arguments of a function with values and as result have another function with less or no arguments.
 In functional first languages, partial application enables function composition and piping. [Haskell](https://wiki.haskell.org/Partial_application) or [F#](https://fsharpforfunandprofit.com/posts/partial-application/) are well-known examples.
-In Python, partial application is supported by out of the box [``functools``](https://docs.python.org/3/library/functools.html#functools.partial) library.
+In python, partial application is supported by out of the box [``functools``](https://docs.python.org/3/library/functools.html#functools.partial) library.
 A classic example of this is making ``power2`` function from ``powern`` function, buy fixing ``n`` with 2.
 
 ```python
@@ -29,7 +29,7 @@ print(powern(3,2)) // Prints 9
 print(power2(3))   // Also prints 9
 
 ```
-In the above example we transformed ``powern`` function with 2 arguments to ``power2`` function with only one argument. The trasformation happnes by ``power2 = partial(powern,n=2)``. If you look closer you will notice ``partial`` itself is a function which is called by ``powern`` as it's first argument and `2` as the second. The ``partial`` function under the hood freezes argument ``n`` with number ``2`` and gives us another function which we name it ``power2``.
+In the above example we transformed ``powern`` function with 2 arguments to ``power2`` function with only one argument. The trasformation happnes by ``power2 = partial(powern,n=2)``. If you look closer you will notice [``partial``](https://docs.python.org/3/library/functools.html#functools.partial) itself is a function which is called with ``powern`` as it's first argument and `2` as the second. The ``partial`` function under the hood freezes argument ``n`` with number ``2`` and gives us another function which we name it ``power2``.
 If it was F# we could compose `power2` with other functions and create a new function. The following is to calculate sum of squares of first n natural numbers using ``power2`` in F#.
 
 ```f#
@@ -61,13 +61,14 @@ let sumOfSquares n =
 Of course I am not suggesting that functions defined in python can be used in F# but only wanted to show the common usages of partial function application in functional languages without needing to know about their syntax much.
 
 
-# How I used Partial Function Application
+# How I used partial application
 The code I wrote which lead to this article was roughly similar to the following code extract. I say roughly because it had extra considerations for scalability, residence, throttling, etc, which I remove to only highlight the usage of partial application. I haven't either displayed the implementation of some of the functions for simplicity but you can imagine how they look like.
 
 ```python
 
 def dump_data_from_service(write_to_db,read_from_service, data_ids_to_read):
-    for data_id in data_ids_read:
+    for data_id in data_ids_read: # Data ids are given, they are the kyes used to find and download
+
        data =  read_from_service(data_id)
        data_with_useful_formt = map_to_useful_format(data)
        write_to_db(data_with_useful_formt)
@@ -77,26 +78,30 @@ def write_to_db(get_db_connection, data):
     connection.write(data)
 
 def read_from_services(read_from_service1, read_from_service2, read_from_service3, data_id):
-    data_part_1 = read_from_service1(data_id)
+    # reading each part of data, imagine to get the full data I needed to use 3 http services
+    data_part_1 = read_from_service1(data_id) 
     data_part_2 = read_from_service2(data_id)
     data_part_3 = read_from_service3(data_id)
+
     return combine_all_parts(data_part_1,data_part_2,data_part_2,data_part_3)
 
 def main():
-    data_ids_to_read = [.....]
+    data_ids_to_read = [.....] # Initialsing the list of data ids 
+
     write_to_sql_db = partial(write_to_db,get_sql_connection)
     read_from_services = partial(read_from_services,read_from_serviceA,read_from_serviceB,reas_from_serviceB)
+
     dump_data_from_service(write_to_sql_db,read_from_services,data_ids_to_read)
 
 ```
-Notice the usage of partial application in the ```main()``` function. I am basically putting together multiple functions by partially apply them with their dependencies. It is similar to what we know as [dependency injection](https://en.wikipedia.org/wiki/Dependency_injection) but with only functions. I mainly did this so I can easily write tests by mocking dependencies
+Notice the usage of partial application in the ```main()``` function. I am basically putting together multiple functions by partially applying them with their dependencies. It is similar to what we know as [dependency injection](https://en.wikipedia.org/wiki/Dependency_injection) but with only functions. I mainly did this so I can easily write tests by mocking dependencies.
 
-# Searching most popular Python repositories on Github
-For this article I did a search on 100+ Python repositories on Github which had more than 100 stars and at least used ``partial`` keyword once over the whole repository. Here is the [source code](https://github.com/samousavih/github-search/blob/main/README.md) used for this article.
-I have short-listed well-known repositories e.g. pip, Panda, Conda, etc. In some repositories partial application was used multiple times but I only picked one use case. Additionally, in many repos the usage of the technique was not very interesting or it was complicated and not suitable to be discussed here. I also, prioritised the samples which partial application was pivotal for the core problem that the repository was solving.
+# Searching most popular python repositories on Github
+For this article I did a search on all python repositories on Github which had more than 100 stars and at least used ``partial`` keyword once over the whole repository. Here is the [source code](https://github.com/samousavih/github-search/blob/main/README.md) used for this article.
+Then I have put together a list of 100+ files of different repositories and read the code to understand how they are using partial application. Finally, I have short-listed well-known repositories and code extracts which were interesting e.g. pip, Panda, Conda, etc. In some repositories partial application was used multiple times but I only picked one use case. Additionally, in many repos the usage of the technique was complicated and not suitable to be discussed here. I have also, prioritised the samples which partial application was pivotal for the core problem that the repository was solving.
 
 # Dry run of Conda commands
-[Conda](https://github.com/conda/conda/tree/main) is a popular package manager. With Conda you can create multiple independent python environments and switch between them when needed. There is also a dry run option which you can use to see how each of Conda's commands would impact the current environment setup. The interesting command we study here is ``Conda rename``. [This command](https://docs.conda.io/projects/conda/en/latest/commands/rename.html) would change the name of an environment. See below a sample usage of this command,
+[Conda](https://github.com/conda/conda/tree/main) is a popular package manager. With Conda you can create multiple independent python environments and switch between them when needed. There is also a dry run option which you can use to see how each command would impact the current environment setup. The interesting command we study here is ``Conda rename``. [This command](https://docs.conda.io/projects/conda/en/latest/commands/rename.html) would change the name of an environment. See below a sample usage of this command,
 ```sh
 $ Conda rename -n oldname newname
 ```
@@ -113,7 +118,7 @@ As you see above dry run shows two actions:
 1) Cloning the current environment to a new path with the new name
 2) Removing current environment 
 
-Now let's have a look at Conda's source code. Rename command has been implemented [main_rename.py](https://github.com/conda/conda/blob/e69b2353c2f14fbfc9fd3aa448ebc991b28ca136/conda/cli/main_rename.py#L127). The following is a code extract from the file,
+Now let's have a look at Conda's source code. Rename command has been implemented in [main_rename.py](https://github.com/conda/conda/blob/e69b2353c2f14fbfc9fd3aa448ebc991b28ca136/conda/cli/main_rename.py#L127). The following is the code extract from the file,
 ```python
 def execute(args: Namespace, parser: ArgumentParser) -> int:
     """Executes the command for renaming an existing environment."""
@@ -146,10 +151,11 @@ def execute(args: Namespace, parser: ArgumentParser) -> int:
                 func()
 #..........................
 ```
-In the code above the function ```clone_and_remove``` creates a tuple of the actions wich should happen as part of the rename command. You can see two ```partial``` function calls to create two functions for first cloning the environment and second removing the old one. ```clone``` and ```rm_rf``` are the two functions which execute the actual actions. The next lines are where the magic happens. The code checks for ```args.dry_run``` and only prints the function names and their arguments otherwise calls each function.
+In the code above the function ```clone_and_remove``` creates a tuple of actions wich should happen as part of the rename command. You can see two ```partial``` function calls ``` partial(install.clone,source,destination,quiet=context.quiet,json=context.json,)``` and ```partial(rm_rf, source)``` to create two functions for first cloning the environment and second removing the old one. ```install.clone``` and ```rm_rf``` are the two functions which execute the actual actions of cloning and removing.
+The next lines are where the magic happens. The code checks for ```args.dry_run``` and if only a dry run was requested, prints the function names and their arguments, otherwise calls each function in the list. 
 
 # Resilient bidirectional mapping in bidict
-[bidict](https://github.com/jab/bidict/) is a Python library designed for bidirectional mapping between keys and values. 
+[bidict](https://github.com/jab/bidict/) is a python library designed for bidirectional mapping between keys and values. 
 With bidict, two sets (dicts) are employed to manage relationships in both directions: from keys to values and vice versa. This bidirectional capability is handy in scenarios where maintaining consistency between the two sets is crucial.
 bidict can handle update failures gracefully, following a [fails clean](https://bidict.readthedocs.io/en/main/basic-usage.html#updates-fail-clean) approach. In the event of an error during an update operation, bidict automatically rolls back the changes, preventing partial updates and maintaining a consistent state.
 The following is an example of how the library would gracefully handle a key duplication,
@@ -221,7 +227,7 @@ All of the operations in those two lists are pre-setup using partial application
 As observed, partial application plays an important role in this design and makes it easier to create the both lists of write and unwrite operations.
 
 # Pre-configuration of options for pip
-[Pip](https://pip.pypa.io/en/stable/) is another widely-used package installer (manager) for Python. Pip has many commands and each has several options. As an example  `-h` option is utilised to display the help information for the `pip install` command. Each option is represented as a class in Pip, providing a structured and modular approach to command-line options.
+[Pip](https://pip.pypa.io/en/stable/) is another widely-used package installer (manager) for python. Pip has many commands and each has several options. As an example  `-h` option is utilised to display the help information for the `pip install` command. Each option is represented as a class in Pip, providing a structured and modular approach to command-line options.
 Pip initialises its options through the definition of classes, which can be seen in [cmdoptions.py](https://github.com/pypa/pip/blob/2a0acb595c4b6394f1f3a4e7ef034ac2e3e8c17e/src/pip/_internal/cli/cmdoptions.py#L121). These options are parsed and processed during various commands.
 Options are defined globally so can be used and shared among commands, allowing for flexibility and code reuse. However, to ensure isolation between commands, options are not instantiated globally.
 Here is an example code extract from Pip's source code "cmdoptions.py" showing the definition of two options : `help_` and `debug_mode`:
@@ -257,9 +263,10 @@ Notice how partial application helps with defining these options and freezing th
 
 # JIT function decorator
 
-[JAX](https://jax.readthedocs.io/) is a library commonly used for just-in-time (JIT) compilation in computations, particularly in performance-critical applications like deep learning. The `jax.jit` function is used for optimising functions on-the-fly.
+[JAX](https://jax.readthedocs.io/) is a library commonly used for high-performance numerical computations, particularly in performance-critical applications like deep learning developed by Google.
+The library includes `jax.jit` function which is used for [Just-in-time compilation](https://en.wikipedia.org/wiki/Just-in-time_compilation).
 
-The [official documentation for `jax.jit`](https://jax.readthedocs.io/en/latest/_autosummary/jax.jit.html#jax.jit) provides information on how to utilize JIT compilation.
+The [official documentation for `jax.jit`](https://jax.readthedocs.io/en/latest/_autosummary/jax.jit.html#jax.jit) provides information on how to utilise JIT compilation.
 
 JIT can be applied as a function decorator. A common practice is to use partial application when passing arguments to the JIT-compiled function. This allows users to customise the behavior by supplying specific arguments.
 
@@ -279,7 +286,7 @@ def multiply_shift_hash_function(
   """Multiply shift hash function."""
  #...............................
 ```
-In this example, the ``multiply_shift_hash_function`` is decorated with ``jax.jit`` using partial application.  ``static_argnames`` is set with ```('mersenne_prime_exponent', 'num_bins')``` which means each time the value of those arguments changes JIT would need to recompile the function.
+In this example, the ``multiply_shift_hash_function`` is decorated with ``jax.jit`` using partial application.  ``static_argnames`` is set with ```('mersenne_prime_exponent', 'num_bins')``` which means each time the value of those arguments changes JIT would need to recompile the function. Partial application is helping here because we don't want to call ```jit``` function yet and only want to initialise it as a decorator.
 
 For fun here is a benchmark to show how JIT improves computation time. In this example we calculating cube of elements in a matrix. This benchmark was done on a Mac with Intel CPU.
 ```python
@@ -320,8 +327,8 @@ Time taken by jit_cube: 39.94196319580078 seconds
 The above examples were only a few among many others. Other interesting cases I found were [Tensorflow](https://github.com/tensorflow/tensorflow/tree/master), [pytorch](https://github.com/pytorch/pytorch/blob/e66ec5843f6cc203de5570059794a3ae14dab4ae/torch/profiler/_utils.py#L24), [saleor](https://github.com/saleor/saleor/blob/d69bb446eff47a767903bdbe840b7db25532b3b0/saleor/discount/models.py#L133), and  [Home Assist ](https://github.com/home-assistant/core/blob/a8148cea65454b79b44ab1c7da15d9b57d39f805/homeassistant/components/dsmr/sensor.py#L589), but avoided adding them here as the article would be too long. Feel free to explore them yourself.
 
 # Conclusion
-1) counldn't find any dependency injection
-2) Mostly was creating operations to use later
-3) joy of learning new 
-4) Double check our understanding with reality
-5) Not easy to search using Apis
+After searching Github I couldn't find many use cases of partial application for dependency injection. So I don't think using the technique in that specific way in python community is common. It is however, difficult to categorise the common cases. Each of the examples before are utilising partial application to resolve a unique and interesting problem, resilience, pre-configurations, function optimisations, etc. Additionally, categorisations somehow, takes the fun out of it and diminishes the joy of learning. As an example someone can say what all of the above cases have in common is pre-configuration of operations without execution or separating the definition of certain operations from their execution, well, maybe.
+
+Another point is, we should always double check what we think make sense with an outside view. I thought it makes perfect sense to use partial application for dependency injection in a python context. But the after actually looking my findings were different.
+
+It is also ridiculous to know despite the richness of source code available for free on Github how limited the search capability is. It is only [released in early 2023](https://github.blog/changelog/2023-05-08-the-new-code-search-and-code-view-is-now-generally-available/) that you can use regular expressions to do a code search and that is not even nearly enough to do a proper code search. I wish if I could type "find me top 100 popular python repositories in Github which utilising partial function application as part of their core solution". Is this too much to ask?
