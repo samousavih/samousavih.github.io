@@ -1,11 +1,13 @@
 ---
 layout: post
-title:  "Partial Function action Application in Python: A look under the hood of popular Python repositories on GitHub"
+title:  "Partial Function Application in Python: A look under the hood of popular Python repositories on GitHub"
 date:   2023-10-12 21:31:54 +1000
 thumbnail: https://cdn-images-1.medium.com/max/2048/1*wmihy9TV2z6x238jY4C6Hw.png
 tags: [functional programming, Python]
 categories: fop
 ---
+
+![](/images/partial-function-application-in-python.png)
 
 # Abstract
 Python community applies partial function application across many popular code repositories. Among them, are Panda, Conda and pip, 
