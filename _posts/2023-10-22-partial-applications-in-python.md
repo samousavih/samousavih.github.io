@@ -1,9 +1,9 @@
 ---
 layout: post
 title:  "Partial Function Application in Python: A look under the hood of popular Python repositories on GitHub"
-date:   2023-10-12 21:31:54 +1000
-thumbnail: https://cdn-images-1.medium.com/max/2048/1*wmihy9TV2z6x238jY4C6Hw.png
-tags: [functional programming, Python]
+date:   2024-01-21 11:30:00 +1100
+thumbnail: /images/partial-function-application-in-python.png
+tags: [functional programming, Python, GitHub]
 categories: fop
 ---
 
@@ -22,7 +22,7 @@ In functional first languages, partial application enables function composition 
 In Python, partial application is supported by out of the box [``functools``](https://docs.Python.org/3/library/functools.html#functools.partial) library.
 A classic example of this is making ``power2`` function from ``powern`` function, buy fixing ``n`` with 2.
 
-```Python
+```python
 def powern(x,n):
     return x**n
 power2 = partial(powern,n=2)
@@ -42,7 +42,7 @@ let sumOfSquares n =
 ```
 Another variation of this example is to freeze dependencies. Imagine ``powern`` function had another argument to log for observability, ``powern(x,n,logger)``.
 
-```Python
+```python
 def powern(x,n,logger):
     logger("calculating {x}^{n}")
     return x**n
@@ -66,7 +66,7 @@ In the above I only wanted to show the common usages of partial function applica
 # How I used partial application
 The code I wrote, which lead to this article, was roughly similar to the following code extract. I say roughly because it had extra considerations for scalability, residence, throttling, etc., which I remove to only highlight the usage of partial application. I haven't either displayed the implementation of some of the functions for simplicity, but you can imagine how they look like.
 
-```Python
+```python
 
 def dump_data_from_service(write_to_db,read_from_service, data_ids_to_read):
     for data_id in data_ids_read: # Data ids are given, they are the kyes used to find and download
@@ -122,7 +122,7 @@ As you see above dry run shows two actions:
 2) Removing current environment 
 
 Now let's have a look at Conda's source code. Rename command has been implemented in [main_rename.py](https://github.com/conda/conda/blob/e69b2353c2f14fbfc9fd3aa448ebc991b28ca136/conda/cli/main_rename.py#L127). The following is the code extract from the file,
-```Python
+```python
 def execute(args: Namespace, parser: ArgumentParser) -> int:
     """Executes the command for renaming an existing environment."""
     from ..base.constants import DRY_RUN_PREFIX
@@ -167,7 +167,7 @@ With bidict, two sets (dicts) are employed to manage relationships in both direc
 bidict can handle update failures gracefully, following a [fails clean](https://bidict.readthedocs.io/en/main/basic-usage.html#updates-fail-clean) approach. In the event of an error during an update operation, bidict automatically rolls back the changes, preventing partial updates and maintaining a consistent state.
 The following is an example of how the library would gracefully handle a key duplication,
 
-```Python
+```python
 b = bidict({1: 'one', 2: 'two'})
 b.putall([(3, 'three'), (1, 'uno')])
 
@@ -180,7 +180,7 @@ As seen above ```putall``` is a function to insert a list of key/value items int
 bidict maintains two dictionaries and update them at the same time. One with key to value relationship and the other with reverse direction. Another important point is, bidict prepares insert operations on both of these dictionaries.
 
 Now lets look under the hood of the library. ```_perp_write``` is the [function]([https://github.com/jab/bidict/blob/7ed2ce59738a1127375ca25a2f8b2c7437514478/bidict/_base.py#L389]) which prepares the operations needed for write.
-```Python
+```python
  def _prep_write(self, newkey: KT, newval: VT, oldkey: OKT[KT], oldval: OVT[VT], save_unwrite: bool) -> PreparedWrite:
         fwdm, invm = self._fwdm, self._invm
         fwdm_set, invm_set = fwdm.__setitem__, invm.__setitem__
@@ -244,7 +244,7 @@ Pip initialises its options through the definition of classes, which can be seen
 Options are defined globally so can be used and shared among commands, allowing for flexibility and code reuse. However, to ensure isolation between commands, options are not instantiated globally.
 Here is an example code extract from Pip's source code "cmdoptions.py" showing the definition of two options : `help_` and `debug_mode`:
 
-```Python
+```python
 #................................
 
 help_: Callable[..., Option] = partial(
@@ -282,7 +282,7 @@ JIT can be applied as a function decorator. A common practice is to use partial 
 
 The `static_argnames` parameter in JIT helps with controlling when to recompile a function. By specifying which arguments are considered static, users can manage the trade-off between compilation overhead and performance gains. An example of using jit can be found in the source code [google-research repository](https://github.com/google-research/google-research/blob/70796b286879cf0fe27c66aa79c0a6413ab70a62/pvn/indicator_functions.py#L97).
 
-```Python
+```python
 @functools.partial(
     jax.jit, static_argnames=('mersenne_prime_exponent', 'num_bins')
 )
@@ -299,7 +299,7 @@ def multiply_shift_hash_function(
 In this example, the ``multiply_shift_hash_function`` is decorated with ``jax.jit`` using partial application.  ``static_argnames`` is set with ```('mersenne_prime_exponent', 'num_bins')``` which means each time the value of those arguments changes JIT would need to recompile the function. Partial application is helping here because we don't want to call ```jit``` function yet and only want to initialise it as a decorator.
 
 For fun here is a benchmark to show how JIT improves computation time. In this example I am calculating cube of elements in a matrix.
-```Python
+```python
 import time
 from jax import jit
 import jax.numpy as jnp
