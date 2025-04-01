@@ -179,7 +179,7 @@ As seen above ```putall``` is a function to insert a list of key/value items int
 
 bidict maintains two dictionaries and update them at the same time. One with key to value relationship and the other with reverse direction. Another important point is, bidict prepares insert operations on both of these dictionaries.
 
-Now lets look under the hood of the library. ```_perp_write``` is the [function]([https://github.com/jab/bidict/blob/7ed2ce59738a1127375ca25a2f8b2c7437514478/bidict/_base.py#L389]) which prepares the operations needed for write.
+Now lets look under the hood of the library. ```_perp_write``` is the [function](https://github.com/jab/bidict/blob/7ed2ce59738a1127375ca25a2f8b2c7437514478/bidict/_base.py#L389) which prepares the operations needed for write.
 ```python
  def _prep_write(self, newkey: KT, newval: VT, oldkey: OKT[KT], oldval: OVT[VT], save_unwrite: bool) -> PreparedWrite:
         fwdm, invm = self._fwdm, self._invm
