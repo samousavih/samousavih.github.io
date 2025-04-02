@@ -15,7 +15,7 @@ theme: default
 1  def powern(x, n):    
 2      return x**n
 3  
-4  print(power(3,2))  # Outputs 9
+4  print(power(2,3))  # Outputs 8
 ```
 
 ---
@@ -24,17 +24,24 @@ theme: default
 ```python
 1  from functools import partial
 2  
-3  power2 = partial(powern, n=2)
+3  power2 = partial(powern, x=2)
 4  
-5  print(power2(3))  # Outputs 9
+5  print(power2(3))  # Outputs 8
 ```
 
+---
+# Popular repositories on Github 
+- [Using GitHub Search Api](https://github.com/samousavih/github-search/blob/main/README.md)
+- More than 100 stars
+- Conda
+- Pip
+- bidict
 ---
 # Conda
 Dry run of Conda commands using partial application
 
 ```sh
-$ Conda rename -n oldname newname
+$ conda rename -n oldname newname
 ```
 ```sh
 $ conda rename -n oldname newname -d
@@ -84,7 +91,7 @@ $ pip install --help
 
 ---
 # Pip
-- Pre-configuration of options for commands without initialisation
+Pre-configuration of options for commands without initialisation
 
 ```python
 1  help_ = partial(
@@ -101,20 +108,6 @@ $ pip install --help
 
 ---
 # Bidict
-Bidirectional Mapping with `bidict`
-
-```python
-1  from bidict import bidict
-2
-3  b = bidict(one=1, two=2, three=3)
-4  print(b["one"])  # Outputs 1
-5  print(b.inv[1])   # Outputs "one"
-```
-
-[Source Code](https://github.com/jab/bidict/blob/main/src/bidict/_base.py#L20)
-
----
-# Bidict
 - `bidict` provides a bidirectional mapping, allowing lookups in both directions.
 - Useful for scenarios like encoding/decoding, where both forward and reverse mappings are needed.
 
@@ -124,6 +117,46 @@ Bidirectional Mapping with `bidict`
 ```
 
 [Source Code](https://github.com/jab/bidict/blob/main/src/bidict/_base.py#L20)
+
+---
+# Bidict - putall
+```python
+b = bidict({1: 'one', 2: 'two'})
+
+# Multiple updates - all or nothing
+b.putall([
+    (3, 'three'),  # Would succeed
+    (1, 'uno'),    # Will fail (key exists)
+    (4, 'four')    # Won't be attempted
+])
+
+# Result: b still equals {1: 'one', 2: 'two'}
+```
+----
+# Bidict - putall 
+
+```python
+1  def _update():
+2      unwrites = []
+3      for key, val in iteritems(arg, **kw):
+4          try:
+5              dedup_result = self._dedup(key, val, on_dup)
+6          except DuplicationError:
+7              if rbof:
+8                  while unwrites:
+9                      for unwriteop in unwrites.pop():
+10                         unwriteop()
+11                 raise
+12          if dedup_result is None:
+13              continue
+14          write, unwrite = prep_write(key, val, *dedup_result, save_unwrite=rbof)
+15          for writeop in write:
+16              writeop()
+17          if rbof:
+18              append_unwrite(unwrite)
+```
+
+[Source Code](https://github.com/jab/bidict/blob/main/src/bidict/_base.py#L200)
 
 ---
 # Bidict - Inside PrepWrite
@@ -141,46 +174,20 @@ Bidirectional Mapping with `bidict`
 11     return write, unwrite
 ```
 ---
-# Bidict - PrepWrite Benefits
-- Prepares all operations before execution
-- Enables atomic updates
-- Makes rollback possible on failures
-- Maintains bidirectional consistency
-
----
-# Bidict - putall Example
-```python
-b = bidict({1: 'one', 2: 'two'})
-
-# Multiple updates - all or nothing
-b.putall([
-    (3, 'three'),  # Would succeed
-    (1, 'uno'),    # Will fail (key exists)
-    (4, 'four')    # Won't be attempted
-])
-
-# Result: b still equals {1: 'one', 2: 'two'}
-```
----
-# Bidict - putall Internals
-- Validates all operations first
-- Creates write/unwrite operations for each pair
-- On any error:
-  - Stops further updates
-  - Executes unwrite operations
-  - Restores original state
----
 
 # Other Findings
-- TensorFlow, PyTorch and Home Assistant also use partial application.
-- Each case solves unique problems like resilience, pre-configuration, and optimization.
+- [TensorFlow](https://github.com/tensorflow/tensorflow/tree/master)
+- [PyTorch](https://github.com/pytorch/pytorch/blob/e66ec5843f6cc203de5570059794a3ae14dab4ae/torch/profiler/_utils.py#L24)
+- [Home Assistant](https://github.com/home-assistant/core/blob/a8148cea65454b79b44ab1c7da15d9b57d39f805/homeassistant/components/dsmr/sensor.py#L589)
 
 ---
+# Who am I?
 
-# Conclusion
-- Partial application is versatile in Python but not commonly used for dependency injection.
-- Enables concise and modular code.
+<img align="center"  height="350" src="./profile.jpg">
 
----
+<img align="right"  height="200" src="./image.png"> 
 
-# Q&A
+amin-mousavi.dev
+Senior Software Engineer @ CBA
+
+
