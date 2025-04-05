@@ -9,7 +9,7 @@ categories: fop
 
 Making Linq to monad work in production code when things don’t play well
 
-![](https://cdn-images-1.medium.com/max/2048/1*j65KedocsoH9e_vHUtjl-Q.png)
+![A diagram showing the architecture of handling async and non-monadic functions in LINQ to monad implementations](https://cdn-images-1.medium.com/max/2048/1*j65KedocsoH9e_vHUtjl-Q.png)
 
 ### Background
 

@@ -2,13 +2,13 @@
 layout: post
 title:  "Measuring Code Readability of Linq to Monad using ChatGPT"
 date:   2023-05-12 21:31:54 +1000
-thumbnail: https://cdn-images-1.medium.com/max/2048/1*EVCcwd1HXO1o4dgy_MqCFA.png
+thumbnail: /images/measuring-code-readability-of-linq-to-monad-using-chatGPT.png
 categories: fop
 ---
 
 Can we use ChatGPT to measure code readability?
 
-![A diagram showing the comparison of code readability metrics between traditional and LINQ-based approaches](/images/EVCcwd1HXO1o4dgy_MqCFA.png)
+![A graph comparing code readability metrics between traditional and LINQ-based approaches showing the results of ChatGPT analysis](/images/EVCcwd1HXO1o4dgy_MqCFA.png)
 
 ### Background
 

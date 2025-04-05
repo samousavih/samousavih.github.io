@@ -2,7 +2,7 @@
 layout: post
 title:  "Improving code readability in functional C# using Linq to Monad"
 date:   2023-05-18 21:31:54 +1000
-thumbnail: https://cdn-images-1.medium.com/max/2048/1*wmihy9TV2z6x238jY4C6Hw.png
+thumbnail: /images/linq-to-monad.png
 tags: [functional programming, Linq]
 categories: fop
 ---
