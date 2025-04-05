@@ -7,7 +7,7 @@ tags: [Entity Framework, oo]
 categories: oop
 ---
 
-![Header Image](/images/teo-d-4op9_2Bt2Eg-unsplash.jpg)
+![A close-up photograph of Java code on a computer screen, illustrating the concept of specification patterns in software development](/images/teo-d-4op9_2Bt2Eg-unsplash.jpg)
 
 Photo by <a href="https://unsplash.com/@teowithacamera?utm_source=unsplash&utm_medium=referral&utm_content=creditCopyText">Teo D</a> on <a href="https://unsplash.com/photos/4op9_2Bt2Eg?utm_source=unsplash&utm_medium=referral&utm_content=creditCopyText">Unsplash</a>
   

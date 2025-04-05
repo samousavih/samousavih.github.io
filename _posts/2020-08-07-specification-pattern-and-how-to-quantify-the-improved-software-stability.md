@@ -8,7 +8,7 @@ categories: oop
 ---
 
 
-![](/images/specification-pattern-and-how-to-quantify-the-improved-software-stability.jpg)
+![A graph measuring software stability metrics, with different colored bars representing specification pattern improvements](/images/specification-pattern-and-how-to-quantify-the-improved-software-stability.jpg)
 
 Photo by [Markus Spiske](https://unsplash.com/@markusspiske) on [Unsplash](https://unsplash.com/s/photos/stability)
 ### Abstract

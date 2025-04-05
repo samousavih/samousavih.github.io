@@ -9,7 +9,7 @@ categories: fop
 
 How to implement computation expressions in C#
 
-![A puppy enthusiastically reading well-written and readable code from a computer screen. Although from here it is not clear if that code is a functional code.](https://cdn-images-1.medium.com/max/2048/1*wmihy9TV2z6x238jY4C6Hw.png)*A puppy enthusiastically reading well-written and readable code from a computer screen. Although from here it is not clear if that code is a functional code.*
+![A puppy sitting at a computer appearing to read code, illustrating the concept of readable functional code](/images/wmihy9TV2z6x238jY4C6Hw.png)*A puppy enthusiastically reading well-written and readable code from a computer screen. Although from here it is not clear if that code is a functional code.*
 
 ### Background and intention
 
@@ -79,7 +79,7 @@ In this context Bind operator handles the logic of error handling after each ste
 
 Before applying the Bind function, please see the way the steps are dependent on each other. Not each step just simply gets it’s input from the step before, it is more complicated. For example, to generate a booking acknowledgment we need a validated booking, a booking number and the calculated fees. So this step depends on the output of all the three steps before.
 
-![Dependency graph for steps in create booking workflow, some of the steps have dependency on one or more steps before them and not just the immediate previous steps.](https://cdn-images-1.medium.com/max/2000/1*jPAjbXzt6jM0iv8i8kLYHg.jpeg)*Dependency graph for steps in create booking workflow, some of the steps have dependency on one or more steps before them and not just the immediate previous steps.*
+![A detailed flowchart showing the steps of binding and mapping functions in LINQ to monad](https://cdn-images-1.medium.com/max/2000/1*jPAjbXzt6jM0iv8i8kLYHg.jpeg)*Dependency graph for steps in create booking workflow, some of the steps have dependency on one or more steps before them and not just the immediate previous steps.*
 
 Now by applying the Bind operator, here is how the create booking function looks like.
 ```c#

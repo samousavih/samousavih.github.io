@@ -7,7 +7,7 @@ tags: [functional programming, Python, GitHub]
 categories: fop
 ---
 
-![](/images/partial-function-application-in-python.png)
+![A diagram illustrating the concept of partial function application in Python, showing how functions can be transformed by fixing certain arguments](/images/partial-function-application-in-python.png)
 
 # Abstract
 Python community applies partial function application across many popular code repositories. Among them, are Panda, Conda and pip, 

@@ -183,9 +183,9 @@ b.putall([
 ---
 # Who am I?
 
-<img align="center"  height="350" src="./profile.jpg">
+<img align="center" height="350" src="./profile.jpg" alt="Profile photo of Amin Mousavi">
 
-<img align="right"  height="200" src="./image.png"> 
+<img align="right" height="200" src="./image.png" alt="Logo or QR code linking to amin-mousavi.dev"> 
 
 amin-mousavi.dev
 Senior Software Engineer @ CBA

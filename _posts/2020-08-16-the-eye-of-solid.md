@@ -8,7 +8,7 @@ categories: oop
 ---
 Interface segregation for a five year old
 
-![](/images/jarek-ceborski-AhS-kgzp600-unsplash.jpg)
+![A close-up photo of a human eye, illustrating the concept of interface segregation](/images/jarek-ceborski-AhS-kgzp600-unsplash.jpg)
 
 Photo by <a href="https://unsplash.com/@jarson?utm_source=unsplash&utm_medium=referral&utm_content=creditCopyText">Jarek Ceborski</a> on <a href="https://unsplash.com/photos/AhS-kgzp600?utm_source=unsplash&utm_medium=referral&utm_content=creditCopyText">Unsplash</a>
 
