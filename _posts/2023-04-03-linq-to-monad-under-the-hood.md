@@ -8,7 +8,7 @@ categories: fop
 ---
 Deep dive into Linq to Monads and how they work
 
-![](/images/linq-under-the-hood.jpg)
+![Diagram showing how LINQ to monad works under the hood](/images/linq-under-the-hood.jpg)
 ### Abstract
 
 This is a deep dive into how Linq to monad works. We try to cover that in the simplest terms and with plenty of examples. We would also discuss how it relates to the Linq to object in C# which typically used for enumerables.
@@ -177,7 +177,7 @@ public static class EitherExtension
 ```
 The signature of the function above shouldn’t be a surprise. The implementation also should make more sense. We are Binding the “first” argument with the result of “getSecond” function and the projection of the result. But, since the projection doesn’t return an Either we utilise Map function to convert that into an Either. You can find an implementation of Map function [here](https://github.com/samousavih/HotelBookingSystem/blob/effacf0210db30d6cc5d0c153a18573382b00951/Core/Either.cs). The following diagram shows how the function above works step by step.
 
-![](https://cdn-images-1.medium.com/max/2000/1*otbNPvQls8P8Ggkru0iPIQ.jpeg)
+![A flowchart showing how SelectMany implementation works with Either monad, demonstrating the binding and mapping process](https://cdn-images-1.medium.com/max/2000/1*otbNPvQls8P8Ggkru0iPIQ.jpeg)
 
 Also, for further clarity let’s look at the hotel booking example and focus on just one part of the workflow. The part which it validates the booking request and then generates a booking number. The code below shows that part, but with a SelectMany function.
 ```c#

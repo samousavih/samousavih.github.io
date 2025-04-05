@@ -6,7 +6,7 @@ permalink: /about/
 
 <div class="container">
   <div class="profile-image">
-    <img src="/images/profile.jpg"  />
+    <img src="/images/profile.jpg" alt="Profile photo of Amin Mousavi" />
   </div>
   <div class="profile-details">
     <div>

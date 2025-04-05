@@ -9,7 +9,7 @@ categories: software-practices
 
 Why pair programming works or how to explain pair programming to your manager.
 
-![Scotty without a doubt would understand pair programming](https://cdn-images-1.medium.com/max/2000/1*vcfh2aYnjUSZP2chOoVXCQ.jpeg)*Scotty without a doubt would understand pair programming*
+![Montgomery Scott (Scotty) from Star Trek working at an engineering console, representing how pair programming concepts would be familiar to Star Trek engineers](https://cdn-images-1.medium.com/max/2000/1*vcfh2aYnjUSZP2chOoVXCQ.jpeg)*Scotty without a doubt would understand pair programming*
 
 ### Computers in the future
 
