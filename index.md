@@ -43,8 +43,8 @@ permalink: /
         <p>
          <div class="row">
           <div style="margin-top: 10px;">
-            <a href="https://youtu.be/nz6cSJV1XQk">Partial Function Application in Python: A look under the hood of popular Python repositories on GitHub: January 2025</a>
-            <h5>DDD Melbourne</h5>
+            <a href="https://youtu.be/nz6cSJV1XQk">Partial Function Application in Python: A look under the hood of popular Python repositories on GitHub</a>
+            <h5>DDD Melbourne: January 2025</h5>
           </div>
           <div style="margin-top: 10px;">
             <a href="https://www.meetup.com/akl-net/events/294755381/">Linqing Railways: How to make Functional Code in C# more Readable and Flexible</a>
