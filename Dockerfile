@@ -1,15 +1,15 @@
 FROM ruby:2.7-alpine
 
-COPY Gemfile ./
+COPY Gemfile Gemfile.lock* ./
 
-RUN apk update \
-&& apk add --virtual .build-deps ruby-dev build-base \
-&& bundle install \
-&& apk del .build-deps \
-&& rm -rf /usr/lib/ruby/gems/*/cache/* \
-          /var/cache/apk/* \
-          /tmp/* \
-          /var/tmp/*
+RUN apk update && \
+    apk add --no-cache build-base linux-headers zlib-dev libxml2-dev libxslt-dev && \
+    bundle install && \
+    apk del build-base linux-headers && \
+    rm -rf /usr/lib/ruby/gems/*/cache/* \
+           /var/cache/apk/* \
+           /tmp/* \
+           /var/tmp/*
 
 WORKDIR /usr/src/app
 EXPOSE 8000
