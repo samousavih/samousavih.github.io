@@ -8,7 +8,7 @@ categories: fop
 
 Can we use ChatGPT to measure code readability?
 
-![A diagram showing the comparison of code readability metrics between traditional and LINQ-based approaches](/images/EVCcwd1HXO1o4dgy_MqCFA.png)
+![A diagram showing the comparison of code readability metrics between traditional and LINQ-based approaches](/images/measuring-code-readability-linq-to-monad.png)
 
 ### Background
 

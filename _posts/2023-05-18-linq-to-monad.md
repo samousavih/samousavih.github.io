@@ -9,7 +9,7 @@ categories: fop
 
 How to implement computation expressions in C#
 
-![A puppy sitting at a computer appearing to read code, illustrating the concept of readable functional code](/images/wmihy9TV2z6x238jY4C6Hw.png)*A puppy enthusiastically reading well-written and readable code from a computer screen. Although from here it is not clear if that code is a functional code.*
+![A puppy sitting at a computer appearing to read code, illustrating the concept of readable functional code](/images/linq-to-monad-code-readability.png)
 
 ### Background and intention
 
